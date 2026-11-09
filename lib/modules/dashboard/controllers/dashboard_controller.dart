@@ -6,6 +6,10 @@ class DashboardController extends GetxController {
   final warehouses = <String>['Gudang Utama', 'Gudang Surabaya', 'Gudang Jakarta'];
 
   void openModule(String title) {
+    if (title == 'Gudang & Lokasi') {
+      Get.toNamed(AppRoutes.warehouse);
+      return;
+    }
     if (title == 'Produk & Kategori') {
       Get.toNamed(AppRoutes.products);
       return;

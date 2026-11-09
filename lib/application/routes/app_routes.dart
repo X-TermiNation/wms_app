@@ -3,4 +3,5 @@ abstract final class AppRoutes {
   static const dashboard = '/dashboard';
   static const module = '/module';
   static const products = '/products';
+  static const warehouse = '/warehouse';
 }
