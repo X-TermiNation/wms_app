@@ -10,6 +10,22 @@ class DashboardController extends GetxController {
       Get.toNamed(AppRoutes.warehouse);
       return;
     }
+    if (title == 'Penerimaan Barang') {
+      Get.toNamed(AppRoutes.receiving);
+      return;
+    }
+    if (title == 'Pengeluaran Barang') {
+      Get.toNamed(AppRoutes.issuing);
+      return;
+    }
+    if (title == 'Transfer Barang') {
+      Get.toNamed(AppRoutes.transfers);
+      return;
+    }
+    if (title == 'Stock Opname') {
+      Get.toNamed(AppRoutes.stockOpname);
+      return;
+    }
     if (title == 'Produk & Kategori') {
       Get.toNamed(AppRoutes.products);
       return;
