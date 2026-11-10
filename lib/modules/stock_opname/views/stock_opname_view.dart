@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../application/constants/app_colors.dart';
+import '../../../services/scanner/scanner_service.dart';
 import '../../../common/widgets/app_search_field.dart';
 import '../../../common/widgets/app_status_badge.dart';
 import '../../products/models/product_model.dart';
@@ -441,6 +443,7 @@ class _OpnameFormState extends State<_OpnameForm> {
 
   final TextEditingController notes = TextEditingController();
   final List<_OpnameDraft> rows = [];
+  StreamSubscription<String>? _scannerSubscription;
 
   late DateTime date;
 
@@ -459,6 +462,30 @@ class _OpnameFormState extends State<_OpnameForm> {
         : null;
 
     date = DateTime.now();
+    _scannerSubscription = ScannerService.instance.listen(_handleBarcode, onError: (error) {
+      Get.snackbar('Scanner error', 'Tidak dapat menerima hasil scan: $error');
+    });
+  }
+
+  void _handleBarcode(String barcode) {
+    final product = c.products.products.firstWhereOrNull(
+      (item) => item.barcode.trim().toLowerCase() == barcode.trim().toLowerCase() ||
+          item.sku.trim().toLowerCase() == barcode.trim().toLowerCase(),
+    );
+    if (product == null) {
+      Get.snackbar('Produk tidak ditemukan', 'Barcode: $barcode', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final existing = rows.firstWhereOrNull((row) => row.product.id == product.id);
+    setState(() {
+      if (existing != null) {
+        final current = int.tryParse(existing.qty.text) ?? 0;
+        existing.qty.text = (current + 1).toString();
+      } else {
+        rows.add(_OpnameDraft(product, TextEditingController(text: '1')));
+      }
+    });
+    Get.snackbar('Produk terhitung', '${product.name} · Total fisik: ${existing == null ? 1 : (int.tryParse(existing.qty.text) ?? 1)}', snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 1));
   }
 
   // ADD PRODUCT
@@ -525,6 +552,7 @@ class _OpnameFormState extends State<_OpnameForm> {
 
   @override
   void dispose() {
+    _scannerSubscription?.cancel();
     notes.dispose();
 
     for (final row in rows) {
@@ -582,6 +610,17 @@ class _OpnameFormState extends State<_OpnameForm> {
                     ),
 
                     const SizedBox(height: 12),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(color: AppColors.softOrange, borderRadius: BorderRadius.circular(10)),
+                      child: const Row(children: [
+                        Icon(Icons.qr_code_scanner, color: AppColors.darkOrange),
+                        SizedBox(width: 8),
+                        Expanded(child: Text('Scan setiap unit produk. Setiap scan menambah stok fisik sebanyak 1.', style: TextStyle(fontSize: 12))),
+                      ]),
+                    ),
+                    const SizedBox(height: 10),
 
                     Row(
                       children: [

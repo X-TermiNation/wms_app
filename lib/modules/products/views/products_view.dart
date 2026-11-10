@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../application/constants/app_colors.dart';
+import '../../../services/scanner/scanner_service.dart';
 import '../../../common/widgets/app_search_field.dart';
 import '../controllers/products_controller.dart';
 import '../models/product_model.dart';
@@ -16,6 +18,7 @@ class _ProductsViewState extends State<ProductsView>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late final ProductsController controller;
+  StreamSubscription<String>? _scannerSubscription;
 
   @override
   void initState() {
@@ -26,6 +29,22 @@ class _ProductsViewState extends State<ProductsView>
     _tabController = TabController(length: 2, vsync: this);
 
     _tabController.addListener(_handleTabChange);
+    _scannerSubscription = ScannerService.instance.listen((barcode) {
+      controller.searchController.text = barcode;
+      controller.updateSearch(barcode);
+      controller.selectedTab.value = 0;
+      if (_tabController.index != 0) _tabController.animateTo(0);
+      final product = controller.products.firstWhereOrNull((item) =>
+          item.barcode.trim() == barcode.trim() || item.sku.trim() == barcode.trim());
+      Get.snackbar(
+        product == null ? 'Produk tidak ditemukan' : 'Produk ditemukan',
+        product == null ? 'Barcode: $barcode' : '${product.name} · ${product.sku}',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
+    }, onError: (error) {
+      Get.snackbar('Scanner error', error.toString());
+    });
   }
 
   void _handleTabChange() {
@@ -36,6 +55,7 @@ class _ProductsViewState extends State<ProductsView>
 
   @override
   void dispose() {
+    _scannerSubscription?.cancel();
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
     super.dispose();
@@ -115,6 +135,19 @@ class _ProductsTab extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => Get.snackbar(
+                  'Scanner siap',
+                  'Tekan tombol scan fisik SUNMI dan arahkan ke barcode produk.',
+                  snackPosition: SnackPosition.BOTTOM,
+                ),
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Scan Barcode SUNMI'),
+              ),
+            ),
+            const SizedBox(height: 8),
             AppSearchField(
               hint: 'Cari nama, SKU, atau barcode...',
               controller: controller.searchController,

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../application/constants/app_colors.dart';
+import '../../../services/scanner/scanner_service.dart';
 import '../../../common/widgets/app_search_field.dart';
 import '../../../common/widgets/app_status_badge.dart';
 import '../../products/models/product_model.dart';
@@ -429,6 +431,7 @@ class _TransferFormState extends State<_TransferForm> {
 
   final TextEditingController notes = TextEditingController();
   final List<_TransferDraft> rows = [];
+  StreamSubscription<String>? _scannerSubscription;
 
   TransferController get c => widget.c;
 
@@ -445,6 +448,30 @@ class _TransferFormState extends State<_TransferForm> {
     destination = activeWarehouses.length > 1 ? activeWarehouses[1].id : null;
 
     date = DateTime.now();
+    _scannerSubscription = ScannerService.instance.listen(_handleBarcode, onError: (error) {
+      Get.snackbar('Scanner error', 'Tidak dapat menerima hasil scan: $error');
+    });
+  }
+
+  void _handleBarcode(String barcode) {
+    final product = c.products.products.firstWhereOrNull(
+      (item) => item.barcode.trim().toLowerCase() == barcode.trim().toLowerCase() ||
+          item.sku.trim().toLowerCase() == barcode.trim().toLowerCase(),
+    );
+    if (product == null) {
+      Get.snackbar('Produk tidak ditemukan', 'Barcode: $barcode', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final existing = rows.firstWhereOrNull((row) => row.product.id == product.id);
+    setState(() {
+      if (existing != null) {
+        final current = int.tryParse(existing.qty.text) ?? 0;
+        existing.qty.text = (current + 1).toString();
+      } else {
+        rows.add(_TransferDraft(product, TextEditingController(text: '1')));
+      }
+    });
+    Get.snackbar('Produk ditambahkan', '${product.name} · $barcode', snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 1));
   }
 
   // ADD ITEM
@@ -507,6 +534,7 @@ class _TransferFormState extends State<_TransferForm> {
 
   @override
   void dispose() {
+    _scannerSubscription?.cancel();
     notes.dispose();
 
     for (final row in rows) {
@@ -570,6 +598,17 @@ class _TransferFormState extends State<_TransferForm> {
                     ),
 
                     const SizedBox(height: 14),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      decoration: BoxDecoration(color: AppColors.softOrange, borderRadius: BorderRadius.circular(10)),
+                      child: const Row(children: [
+                        Icon(Icons.qr_code_scanner, color: AppColors.darkOrange),
+                        SizedBox(width: 8),
+                        Expanded(child: Text('Tekan tombol scan SUNMI untuk menambahkan produk otomatis.', style: TextStyle(fontSize: 12))),
+                      ]),
+                    ),
+                    const SizedBox(height: 10),
 
                     Row(
                       children: [
