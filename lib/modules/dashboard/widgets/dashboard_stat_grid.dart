@@ -46,9 +46,9 @@ class DashboardStatGrid extends StatelessWidget {
       itemCount: _items.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        mainAxisExtent: 112,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 132,
       ),
       itemBuilder: (context, index) {
         final item = _items[index];

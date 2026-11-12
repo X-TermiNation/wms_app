@@ -419,11 +419,15 @@ class _FormDialogShell extends StatelessWidget {
     insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 440, maxHeight: 620),
+      constraints: BoxConstraints(maxWidth: 440, maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, 620.0).toDouble()),
       child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
         const SizedBox(height: 18),
-        Flexible(child: SingleChildScrollView(child: Column(children: children))),
+        Flexible(child: SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12),
+          child: Column(children: children),
+        )),
         const SizedBox(height: 14),
         Row(children: [
           Expanded(child: OutlinedButton(onPressed: Get.back, child: const Text('Batal'))),

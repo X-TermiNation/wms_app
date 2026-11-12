@@ -318,7 +318,7 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 440, maxHeight: 650),
+        constraints: BoxConstraints(maxWidth: 440, maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, 650.0).toDouble()),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
           child: Column(
@@ -335,6 +335,8 @@ class _ProductFormDialogState extends State<_ProductFormDialog> {
 
               Flexible(
                 child: SingleChildScrollView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12),
                   child: Column(
                     children: [
                       buildField(name, 'Nama produk'),

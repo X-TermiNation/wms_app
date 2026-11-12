@@ -277,11 +277,11 @@ class _IssuingFormState extends State<_IssuingForm> {
     insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     child: ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: Get.height * .9),
+      constraints: BoxConstraints(maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, Get.height * .9).toDouble()),
       child: Form(key: _formKey, child: Column(mainAxisSize: MainAxisSize.min, children: [
         Padding(padding: const EdgeInsets.fromLTRB(18, 17, 10, 12), child: Row(children: [const Expanded(child: Text('Buat Pengeluaran', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),), IconButton(onPressed: Get.back, icon: const Icon(Icons.close))])),
         const Divider(height: 1),
-        Flexible(child: ListView(padding: const EdgeInsets.all(16), children: [
+        Flexible(child: ListView(padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).viewInsets.bottom), keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, children: [
           _fieldLabel('Tujuan pengeluaran'),
           TextFormField(controller: _destination, decoration: _decoration('Contoh: Produksi, Cabang, atau Maintenance'), validator: (v) => v == null || v.trim().isEmpty ? 'Tujuan wajib diisi.' : null),
           const SizedBox(height: 13),

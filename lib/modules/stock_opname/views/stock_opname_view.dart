@@ -568,7 +568,7 @@ class _OpnameFormState extends State<_OpnameForm> {
       insetPadding: const EdgeInsets.all(14),
       child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: Get.height * 0.88,
+          maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, Get.height * 0.88).toDouble(),
           maxWidth: 520,
         ),
         child: Padding(
@@ -585,6 +585,8 @@ class _OpnameFormState extends State<_OpnameForm> {
 
               Expanded(
                 child: ListView(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12),
                   children: [
                     DropdownButtonFormField<String>(
                       value: warehouseId,

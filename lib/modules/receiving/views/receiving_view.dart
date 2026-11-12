@@ -718,7 +718,7 @@ class _ReceivingFormDialogState extends State<_ReceivingFormDialog> {
     insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 500, maxHeight: 720),
+      constraints: BoxConstraints(maxWidth: 500, maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, 720.0).toDouble()),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
         child: Column(
@@ -731,6 +731,8 @@ class _ReceivingFormDialogState extends State<_ReceivingFormDialog> {
             const SizedBox(height: 15),
             Flexible(
               child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
