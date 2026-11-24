@@ -2,239 +2,154 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../application/constants/app_colors.dart';
+import '../../../common/helpers/api_feedback.dart';
+import '../../../services/api/api_client.dart';
+import '../../../services/auth/warehouse_context.dart';
 import '../../products/controllers/products_controller.dart';
-import '../../products/models/product_model.dart';
-import '../../warehouse/controllers/warehouse_controller.dart';
 import '../models/stock_opname_model.dart';
 
+/// Stock opname per lokasi x batch x status. Draft tidak mengubah stok;
+/// penyesuaian terjadi setelah disetujui supervisor/admin (divalidasi backend).
 class StockOpnameController extends GetxController {
+  final _api = ApiClient.instance;
+
   final searchController = TextEditingController();
   final searchQuery = ''.obs;
   final selectedStatus = 'Semua'.obs;
+  final isLoading = false.obs;
+  final isBusy = false.obs;
 
   late final ProductsController products;
-  late final WarehouseController warehouses;
 
   final records = <StockOpnameModel>[].obs;
+
+  String get warehouseId => WarehouseContext.instance.activeId.value;
+  bool get canApprove => WarehouseContext.instance.canApprove;
 
   @override
   void onInit() {
     super.onInit();
-
     products = Get.find<ProductsController>();
-    warehouses = Get.find<WarehouseController>();
+    fetchRecords();
+  }
+
+  Future<void> fetchRecords() async {
+    isLoading.value = true;
+    try {
+      records.assignAll(await _api.getList('/stock-opnames', StockOpnameModel.fromJson, query: {'warehouseId': warehouseId}));
+    } catch (e) {
+      showApiError(e, title: 'Gagal memuat stock opname');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   List<StockOpnameModel> get filteredRecords {
     final query = searchQuery.value.trim().toLowerCase();
-
     return records.where((record) {
-      final statusOk =
-          selectedStatus.value == 'Semua' ||
-          statusLabel(record.status) == selectedStatus.value;
-
-      final queryOk =
-          query.isEmpty ||
+      final statusOk = selectedStatus.value == 'Semua' || statusLabel(record.status) == selectedStatus.value;
+      final queryOk = query.isEmpty ||
           record.number.toLowerCase().contains(query) ||
-          record.warehouseName.toLowerCase().contains(query);
-
+          (record.locationCode ?? '').toLowerCase().contains(query);
       return statusOk && queryOk;
     }).toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  int get completedCount =>
-      records.where((r) => r.status == OpnameStatus.completed).length;
-
+  int get completedCount => records.where((r) => r.status == OpnameStatus.completed).length;
+  int get draftCount => records.where((r) => r.status == OpnameStatus.draft).length;
   int get totalDifferences => records
       .where((r) => r.status == OpnameStatus.completed)
-      .fold(
-        0,
-        (sum, record) =>
-            sum + record.items.where((item) => item.difference != 0).length,
-      );
+      .fold(0, (sum, record) => sum + record.items.where((item) => item.difference != 0).length);
 
-  void updateSearch(String value) {
-    searchQuery.value = value;
+  void updateSearch(String value) => searchQuery.value = value;
+
+  void _upsert(StockOpnameModel record) {
+    final index = records.indexWhere((r) => r.id == record.id);
+    if (index >= 0) {
+      records[index] = record;
+    } else {
+      records.add(record);
+    }
   }
 
-  bool createOpname({
-    required String warehouseId,
+  Future<bool> createOpname({
+    required String locationId,
     required DateTime date,
     required List<StockOpnameItemModel> items,
     required String notes,
-  }) {
-    final warehouse = warehouses.warehouses.firstWhereOrNull(
-      (w) => w.id == warehouseId,
-    );
-
-    if (warehouse == null) {
-      _error('Pilih gudang yang valid.');
+    required String idempotencyKey,
+  }) async {
+    if (isBusy.value) return false;
+    isBusy.value = true;
+    try {
+      final data = await _api.post('/stock-opnames', {
+        'warehouseId': warehouseId,
+        'locationId': locationId,
+        'date': ApiClient.formatDate(date),
+        'notes': notes.trim(),
+        'items': items.map((e) => e.toJson()).toList(),
+      }, idempotencyKey);
+      final record = StockOpnameModel.fromJson(data as Map<String, dynamic>);
+      _upsert(record);
+      showSuccess('Hasil hitung tersimpan', '${record.number} disimpan sebagai Draft. Stok berubah setelah disetujui supervisor.');
+      return true;
+    } catch (e) {
+      showApiError(e, title: 'Gagal menyimpan opname');
       return false;
-    }
-
-    if (items.isEmpty) {
-      _error('Masukkan minimal satu produk.');
-      return false;
-    }
-
-    final productIds = items.map((item) => item.productId).toSet();
-
-    if (productIds.length != items.length) {
-      _error('Produk yang sama hanya boleh dimasukkan satu kali.');
-      return false;
-    }
-
-    if (items.any((item) => item.physicalStock < 0)) {
-      _error('Stok fisik tidak boleh negatif.');
-      return false;
-    }
-
-    for (final item in items) {
-      final product = products.products.firstWhereOrNull(
-        (p) => p.id == item.productId,
-      );
-
-      if (product == null) {
-        _error('Produk ${item.productName} tidak ditemukan.');
-        return false;
-      }
-    }
-
-    final number =
-        'OPN-${date.year}-${(records.length + 1).toString().padLeft(3, '0')}';
-
-    final record = StockOpnameModel(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      number: number,
-      date: date,
-      warehouseId: warehouseId,
-      warehouseName: warehouse.name,
-      status: OpnameStatus.draft,
-      items: List.unmodifiable(items),
-      notes: notes.trim(),
-    );
-
-    records.add(record);
-
-    return true;
-  }
-
-  void complete(StockOpnameModel record) {
-    if (record.status != OpnameStatus.draft) {
-      _error('Hanya Stock Opname Draft yang dapat diselesaikan.');
-      return;
-    }
-
-    // Tahap 1: validasi semua produk dan stok sistem.
-    // Belum ada perubahan data pada tahap ini.
-    for (final item in record.items) {
-      final product = products.products.firstWhereOrNull(
-        (p) => p.id == item.productId,
-      );
-
-      if (product == null) {
-        _error('Produk ${item.productName} tidak ditemukan.');
-        return;
-      }
-
-      if (product.stock != item.systemStock) {
-        _error(
-          'Stok sistem ${item.productName} sudah berubah. '
-          'Buat opname ulang agar data akurat.',
-        );
-        return;
-      }
-    }
-
-    // Tahap 2: semua validasi lolos, baru perbarui stok.
-    for (final item in record.items) {
-      final index = products.products.indexWhere((p) => p.id == item.productId);
-
-      if (index < 0) continue;
-
-      final product = products.products[index];
-
-      products.products[index] = ProductModel(
-        id: product.id,
-        sku: product.sku,
-        barcode: product.barcode,
-        name: product.name,
-        category: product.category,
-        unit: product.unit,
-        stock: item.physicalStock,
-        minimumStock: product.minimumStock,
-        location: product.location,
-      );
-    }
-
-    // Tahap 3: ubah status transaksi.
-    final recordIndex = records.indexWhere((r) => r.id == record.id);
-
-    if (recordIndex < 0) {
-      _error('Data Stock Opname tidak ditemukan.');
-      return;
-    }
-
-    records[recordIndex] = record.copyWith(status: OpnameStatus.completed);
-
-    Get.snackbar(
-      'Stock Opname selesai',
-      'Stok produk berhasil disesuaikan dengan hasil fisik.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
-
-  void cancel(StockOpnameModel record) {
-    if (record.status != OpnameStatus.draft) {
-      _error('Hanya Draft yang dapat dibatalkan.');
-      return;
-    }
-
-    final index = records.indexWhere((r) => r.id == record.id);
-
-    if (index >= 0) {
-      records[index] = record.copyWith(status: OpnameStatus.cancelled);
+    } finally {
+      isBusy.value = false;
     }
   }
 
-  void deleteDraft(StockOpnameModel record) {
-    if (record.status != OpnameStatus.draft) {
-      _error('Hanya Draft yang dapat dihapus.');
+  Future<void> complete(StockOpnameModel record) async {
+    if (!canApprove) {
+      Get.snackbar('Butuh persetujuan', 'Penyesuaian stok hanya dapat disetujui supervisor / admin.', snackPosition: SnackPosition.BOTTOM);
       return;
     }
+    await _run(() async {
+      final data = await _api.post('/stock-opnames/${record.id}/complete', null, _api.newIdempotencyKey());
+      _upsert(StockOpnameModel.fromJson(data as Map<String, dynamic>));
+      await products.reloadProductsSilently();
+      showSuccess('Stock Opname disetujui', 'Stok disesuaikan dengan hasil fisik dan tercatat di riwayat.');
+    });
+  }
 
+  Future<void> cancel(StockOpnameModel record) => _run(() async {
+    final data = await _api.post('/stock-opnames/${record.id}/cancel');
+    _upsert(StockOpnameModel.fromJson(data as Map<String, dynamic>));
+  });
+
+  Future<void> deleteDraft(StockOpnameModel record) => _run(() async {
+    await _api.delete('/stock-opnames/${record.id}');
     records.removeWhere((r) => r.id == record.id);
+  });
+
+  Future<void> _run(Future<void> Function() action) async {
+    if (isBusy.value) return;
+    isBusy.value = true;
+    try {
+      await action();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      isBusy.value = false;
+    }
   }
 
-  void _error(String message) {
-    Get.snackbar(
-      'Tidak dapat diproses',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
+  static String statusLabel(OpnameStatus status) => switch (status) {
+    OpnameStatus.draft => 'Draft',
+    OpnameStatus.completed => 'Completed',
+    OpnameStatus.cancelled => 'Cancelled',
+  };
 
-  static String statusLabel(OpnameStatus status) {
-    return switch (status) {
-      OpnameStatus.draft => 'Draft',
-      OpnameStatus.completed => 'Completed',
-      OpnameStatus.cancelled => 'Cancelled',
-    };
-  }
+  static Color statusColor(OpnameStatus status) => switch (status) {
+    OpnameStatus.draft => Colors.grey,
+    OpnameStatus.completed => AppColors.success,
+    OpnameStatus.cancelled => AppColors.danger,
+  };
 
-  static Color statusColor(OpnameStatus status) {
-    return switch (status) {
-      OpnameStatus.draft => Colors.grey,
-      OpnameStatus.completed => AppColors.success,
-      OpnameStatus.cancelled => AppColors.danger,
-    };
-  }
-
-  static String formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
-  }
+  static String formatDate(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   @override
   void onClose() {

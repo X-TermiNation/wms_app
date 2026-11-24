@@ -4,6 +4,8 @@ import '../controllers/warehouse_controller.dart';
 class WarehouseBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<WarehouseController>(() => WarehouseController());
+    if (!Get.isRegistered<WarehouseController>()) {
+      Get.put<WarehouseController>(WarehouseController(), permanent: true);
+    }
   }
 }

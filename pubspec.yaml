@@ -10,6 +10,11 @@ dependencies:
   flutter:
     sdk: flutter
   get: ^4.7.3
+  http: ^1.6.0
+  shared_preferences: ^2.5.5
+  print_bluetooth_thermal: 1.2.1
+  image_picker: ^1.2.2
+  barcode_widget: ^2.0.4
 
 dev_dependencies:
   flutter_test:

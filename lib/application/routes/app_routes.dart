@@ -5,7 +5,16 @@ abstract final class AppRoutes {
   static const products = '/products';
   static const warehouse = '/warehouse';
   static const receiving = '/receiving';
+  static const putaway = '/putaway';
+  static const qcTransfer = '/qc-transfer';
+  static const qcInspection = '/qc-inspection';
+  static const qcRelease = '/qc-release';
+  static const qcHold = '/qc-hold';
+  static const qcRejected = '/qc-rejected';
   static const issuing = '/issuing';
+  static const packing = '/packing';
+  static const shipments = '/shipments';
   static const transfers = '/transfers';
   static const stockOpname = '/stock-opname';
+  static const history = '/history';
 }

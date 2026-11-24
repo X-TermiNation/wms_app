@@ -2,317 +2,193 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../application/constants/app_colors.dart';
+import '../../../common/helpers/api_feedback.dart';
+import '../../../services/api/api_client.dart';
+import '../../../services/auth/warehouse_context.dart';
 import '../../products/controllers/products_controller.dart';
 import '../../warehouse/controllers/warehouse_controller.dart';
+import '../../warehouse/models/warehouse_model.dart';
 import '../models/transfer_model.dart';
 
+/// Transfer antar gudang/cabang: kirim (IN_TRANSIT) lalu diterima gudang tujuan.
 class TransferController extends GetxController {
+  final _api = ApiClient.instance;
+
   final searchController = TextEditingController();
   final searchQuery = ''.obs;
   final selectedStatus = 'Semua'.obs;
+  final isLoading = false.obs;
+  final isBusy = false.obs;
 
   late final ProductsController products;
   late final WarehouseController warehouses;
 
   final transfers = <TransferModel>[].obs;
 
+  String get warehouseId => WarehouseContext.instance.activeId.value;
+
+  /// Gudang tujuan yang boleh dipilih (semua gudang aktif selain gudang aktif).
+  List<WarehouseModel> get destinationOptions => warehouses.allWarehouses.where((w) => w.id != warehouseId && w.isActive).toList();
+
   @override
   void onInit() {
     super.onInit();
-
     products = Get.find<ProductsController>();
     warehouses = Get.find<WarehouseController>();
+    if (warehouses.allWarehouses.isEmpty) warehouses.fetchAll();
+    fetchTransfers();
+  }
 
-    if (warehouses.warehouses.length >= 2 && products.products.isNotEmpty) {
-      transfers.addAll([
-        TransferModel(
-          id: 'TRF-001',
-          number: 'TRF-2026-001',
-          date: DateTime(2026, 11, 8),
-          sourceWarehouseId: 'WH-001',
-          sourceWarehouseName: 'Gudang Utama',
-          destinationWarehouseId: 'WH-002',
-          destinationWarehouseName: 'Gudang Surabaya',
-          status: TransferStatus.completed,
-          items: [
-            TransferItemModel(
-              productId: '1',
-              productName: 'Kabel USB Type-C',
-              sku: 'ELK-001',
-              unit: 'PCS',
-              quantity: 12,
-            ),
-          ],
-          notes: 'Distribusi stok cabang.',
-        ),
-        TransferModel(
-          id: 'TRF-002',
-          number: 'TRF-2026-002',
-          date: DateTime(2026, 11, 10),
-          sourceWarehouseId: 'WH-001',
-          sourceWarehouseName: 'Gudang Utama',
-          destinationWarehouseId: 'WH-003',
-          destinationWarehouseName: 'Gudang Jakarta',
-          status: TransferStatus.pending,
-          items: [
-            TransferItemModel(
-              productId: '3',
-              productName: 'Obeng Set',
-              sku: 'PRT-001',
-              unit: 'SET',
-              quantity: 3,
-            ),
-          ],
-        ),
-      ]);
+  Future<void> fetchTransfers() async {
+    isLoading.value = true;
+    try {
+      transfers.assignAll(await _api.getList('/transfers', TransferModel.fromJson, query: {'warehouseId': warehouseId}));
+    } catch (e) {
+      showApiError(e, title: 'Gagal memuat transfer');
+    } finally {
+      isLoading.value = false;
     }
   }
 
+  bool isInbound(TransferModel t) => t.destinationWarehouseId == warehouseId;
+
   List<TransferModel> get filteredTransfers {
     final query = searchQuery.value.trim().toLowerCase();
-
-    return transfers.where((transfer) {
-      final statusOk =
-          selectedStatus.value == 'Semua' ||
-          statusLabel(transfer.status) == selectedStatus.value;
-
-      final queryOk =
-          query.isEmpty ||
-          transfer.number.toLowerCase().contains(query) ||
-          transfer.sourceWarehouseName.toLowerCase().contains(query) ||
-          transfer.destinationWarehouseName.toLowerCase().contains(query);
-
+    return transfers.where((t) {
+      final statusOk = selectedStatus.value == 'Semua' ||
+          (selectedStatus.value == 'Perlu Diterima' ? isInbound(t) && t.status == TransferStatus.inTransit : statusLabel(t.status) == selectedStatus.value);
+      final queryOk = query.isEmpty ||
+          t.number.toLowerCase().contains(query) ||
+          t.sourceWarehouseName.toLowerCase().contains(query) ||
+          t.destinationWarehouseName.toLowerCase().contains(query) ||
+          t.lots.any((l) => l.batchNumber.toLowerCase().contains(query));
       return statusOk && queryOk;
     }).toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
-  int get completedCount =>
-      transfers.where((t) => t.status == TransferStatus.completed).length;
+  int get completedCount => transfers.where((t) => t.status == TransferStatus.completed).length;
+  int get inboundPending => transfers.where((t) => isInbound(t) && t.status == TransferStatus.inTransit).length;
+  int get totalMoved => transfers.where((t) => t.status == TransferStatus.completed).fold(0, (sum, t) => sum + t.totalQuantity);
 
-  int get totalMoved => transfers
-      .where((t) => t.status == TransferStatus.completed)
-      .fold(0, (sum, t) => sum + t.totalQuantity);
+  void updateSearch(String value) => searchQuery.value = value;
 
-  void updateSearch(String value) {
-    searchQuery.value = value;
+  void _upsert(TransferModel record) {
+    final index = transfers.indexWhere((t) => t.id == record.id);
+    if (index >= 0) {
+      transfers[index] = record;
+    } else {
+      transfers.add(record);
+    }
   }
 
-  // Menggabungkan jumlah jika produk yang sama dimasukkan lebih dari sekali.
-  Map<String, int> _calculateTotals(List<TransferItemModel> items) {
-    final totals = <String, int>{};
-
-    for (final item in items) {
-      totals.update(
-        item.productId,
-        (value) => value + item.quantity,
-        ifAbsent: () => item.quantity,
-      );
-    }
-
-    return totals;
-  }
-
-  // Memastikan semua produk tersedia dan jumlahnya valid.
-  bool _validateItems(List<TransferItemModel> items) {
-    if (items.isEmpty || items.any((item) => item.quantity <= 0)) {
-      _error('Tambahkan produk dengan jumlah lebih dari nol.');
-      return false;
-    }
-
-    for (final item in items) {
-      final product = products.products.firstWhereOrNull(
-        (p) => p.id == item.productId,
-      );
-
-      if (product == null) {
-        _error('Produk ${item.productName} tidak ditemukan.');
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  // Pemeriksaan ini masih menggunakan stok global produk.
-  // Belum memeriksa saldo stok khusus gudang asal.
-  bool _validateGlobalStock(List<TransferItemModel> items) {
-    final totals = _calculateTotals(items);
-
-    for (final entry in totals.entries) {
-      final product = products.products.firstWhereOrNull(
-        (p) => p.id == entry.key,
-      );
-
-      if (product == null || entry.value > product.stock) {
-        _error('Stok ${product?.name ?? 'produk'} tidak mencukupi.');
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  bool createTransfer({
-    required String sourceId,
+  /// Simpan transfer; [ship] = langsung kirim (stok AVAILABLE gudang asal -> IN_TRANSIT).
+  Future<TransferModel?> createTransfer({
     required String destinationId,
     required DateTime date,
     required List<TransferItemModel> items,
     required String notes,
-    required TransferStatus status,
-  }) {
-    if (sourceId == destinationId) {
-      _error('Gudang asal dan tujuan tidak boleh sama.');
-      return false;
-    }
-
-    final source = warehouses.warehouses.firstWhereOrNull(
-      (w) => w.id == sourceId,
-    );
-
-    final destination = warehouses.warehouses.firstWhereOrNull(
-      (w) => w.id == destinationId,
-    );
-
-    if (source == null || destination == null) {
-      _error('Pilih gudang asal dan tujuan yang valid.');
-      return false;
-    }
-
-    if (!_validateItems(items)) {
-      return false;
-    }
-
-    if (status == TransferStatus.completed && !_validateGlobalStock(items)) {
-      return false;
-    }
-
-    final number =
-        'TRF-${date.year}-${(transfers.length + 1).toString().padLeft(3, '0')}';
-
-    final transfer = TransferModel(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      number: number,
-      date: date,
-      sourceWarehouseId: sourceId,
-      sourceWarehouseName: source.name,
-      destinationWarehouseId: destinationId,
-      destinationWarehouseName: destination.name,
-      status: status,
-      items: List.unmodifiable(items),
-      notes: notes.trim(),
-    );
-
-    transfers.add(transfer);
-
-    if (status == TransferStatus.completed) {
-      _applyTransferStock();
-    }
-
-    return true;
-  }
-
-  void changeStatus(TransferModel record, TransferStatus newStatus) {
-    if (record.status == TransferStatus.completed ||
-        record.status == TransferStatus.cancelled) {
-      _error('Transaksi selesai atau dibatalkan sudah terkunci.');
-      return;
-    }
-
-    if (record.status == newStatus) {
-      return;
-    }
-
-    // Status hanya boleh bergerak dari Draft ke Pending/Cancelled,
-    // atau Pending ke Completed/Cancelled.
-    final allowed = switch (record.status) {
-      TransferStatus.draft => [
-        TransferStatus.pending,
-        TransferStatus.cancelled,
-      ],
-      TransferStatus.pending => [
-        TransferStatus.completed,
-        TransferStatus.cancelled,
-      ],
-      TransferStatus.completed => <TransferStatus>[],
-      TransferStatus.cancelled => <TransferStatus>[],
-    };
-
-    if (!allowed.contains(newStatus)) {
-      _error('Perubahan status transaksi tidak diperbolehkan.');
-      return;
-    }
-
-    if (newStatus == TransferStatus.completed) {
-      if (!_validateGlobalStock(record.items)) {
-        return;
+    required bool ship,
+    required String idempotencyKey,
+  }) async {
+    if (isBusy.value) return null;
+    isBusy.value = true;
+    try {
+      final data = await _api.post('/transfers', {
+        'sourceWarehouseId': warehouseId,
+        'destinationWarehouseId': destinationId,
+        'date': ApiClient.formatDate(date),
+        'status': 'pending',
+        'notes': notes.trim(),
+        'items': items.map((e) => e.toJson()).toList(),
+      }, idempotencyKey);
+      var record = TransferModel.fromJson(data as Map<String, dynamic>);
+      _upsert(record);
+      if (ship) {
+        final shipped = await _api.post('/transfers/${record.id}/ship', null, '$idempotencyKey:ship');
+        record = TransferModel.fromJson(shipped as Map<String, dynamic>);
+        _upsert(record);
+        await products.reloadProductsSilently();
       }
-    }
-
-    final index = transfers.indexWhere((t) => t.id == record.id);
-
-    if (index < 0) {
-      _error('Data transfer tidak ditemukan.');
-      return;
-    }
-
-    transfers[index] = record.copyWith(status: newStatus);
-
-    if (newStatus == TransferStatus.completed) {
-      _applyTransferStock();
+      return record;
+    } catch (e) {
+      showApiError(e, title: 'Transfer gagal');
+      await fetchTransfers();
+      return null;
+    } finally {
+      isBusy.value = false;
     }
   }
 
-  void _applyTransferStock() {
-    // Transfer tidak mengubah total stok global.
-    // Fungsi ini belum memindahkan saldo antar gudang karena
-    // model stok per gudang belum tersedia.
-    Get.snackbar(
-      'Transfer selesai',
-      'Transaksi transfer berhasil diselesaikan.',
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
+  Future<void> ship(TransferModel record) => _run(() async {
+    final data = await _api.post('/transfers/${record.id}/ship', null, _api.newIdempotencyKey());
+    _upsert(TransferModel.fromJson(data as Map<String, dynamic>));
+    await products.reloadProductsSilently();
+    showSuccess('Transfer dikirim', '${record.number} berstatus IN TRANSIT sampai diterima ${record.destinationWarehouseName}.');
+  });
 
-  void deleteDraft(TransferModel transfer) {
-    if (transfer.status != TransferStatus.draft) {
-      _error('Hanya transaksi Draft yang dapat dihapus.');
-      return;
+  Future<void> cancel(TransferModel record) => _run(() async {
+    final data = await _api.patch('/transfers/${record.id}/status', {'status': 'cancelled'});
+    _upsert(TransferModel.fromJson(data as Map<String, dynamic>));
+  });
+
+  Future<void> deleteDraft(TransferModel record) => _run(() async {
+    if (record.status == TransferStatus.pending) {
+      await _api.patch('/transfers/${record.id}/status', {'status': 'draft'});
     }
+    await _api.delete('/transfers/${record.id}');
+    transfers.removeWhere((t) => t.id == record.id);
+  });
 
-    transfers.removeWhere((t) => t.id == transfer.id);
+  /// Konfirmasi penerimaan di gudang tujuan. Mengembalikan true jika berhasil.
+  Future<bool> receive(TransferModel record, List<Map<String, dynamic>> items, String idempotencyKey) async {
+    if (isBusy.value) return false;
+    isBusy.value = true;
+    try {
+      final data = await _api.post('/transfers/${record.id}/receive', {'items': items}, idempotencyKey);
+      final updated = TransferModel.fromJson(data as Map<String, dynamic>);
+      _upsert(updated);
+      await products.reloadProductsSilently();
+      showSuccess('Penerimaan transfer dicatat',
+          updated.status == TransferStatus.completed ? 'Seluruh barang diterima. Transfer selesai.' : 'Sisa ${updated.remainingQuantity} unit masih IN TRANSIT.');
+      return true;
+    } catch (e) {
+      showApiError(e, title: 'Penerimaan gagal');
+      return false;
+    } finally {
+      isBusy.value = false;
+    }
   }
 
-  void _error(String message) {
-    Get.snackbar(
-      'Tidak dapat diproses',
-      message,
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  Future<void> _run(Future<void> Function() action) async {
+    if (isBusy.value) return;
+    isBusy.value = true;
+    try {
+      await action();
+    } catch (e) {
+      showApiError(e);
+    } finally {
+      isBusy.value = false;
+    }
   }
 
-  static String statusLabel(TransferStatus status) {
-    return switch (status) {
-      TransferStatus.draft => 'Draft',
-      TransferStatus.pending => 'Pending',
-      TransferStatus.completed => 'Completed',
-      TransferStatus.cancelled => 'Cancelled',
-    };
-  }
+  static String statusLabel(TransferStatus status) => switch (status) {
+    TransferStatus.draft => 'Draft',
+    TransferStatus.pending => 'Pending',
+    TransferStatus.inTransit => 'In Transit',
+    TransferStatus.completed => 'Completed',
+    TransferStatus.cancelled => 'Cancelled',
+  };
 
-  static Color statusColor(TransferStatus status) {
-    return switch (status) {
-      TransferStatus.draft => Colors.grey,
-      TransferStatus.pending => AppColors.warning,
-      TransferStatus.completed => AppColors.success,
-      TransferStatus.cancelled => AppColors.danger,
-    };
-  }
+  static Color statusColor(TransferStatus status) => switch (status) {
+    TransferStatus.draft => Colors.grey,
+    TransferStatus.pending => AppColors.warning,
+    TransferStatus.inTransit => const Color(0xFF6B5BD2),
+    TransferStatus.completed => AppColors.success,
+    TransferStatus.cancelled => AppColors.danger,
+  };
 
-  static String formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
-  }
+  static String formatDate(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   @override
   void onClose() {

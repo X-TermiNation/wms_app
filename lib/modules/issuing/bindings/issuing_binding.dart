@@ -7,10 +7,10 @@ class IssuingBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<ProductsController>()) {
-      Get.lazyPut<ProductsController>(() => ProductsController());
+      Get.put<ProductsController>(ProductsController(), permanent: true);
     }
     if (!Get.isRegistered<WarehouseController>()) {
-      Get.lazyPut<WarehouseController>(() => WarehouseController());
+      Get.put<WarehouseController>(WarehouseController(), permanent: true);
     }
     Get.lazyPut<IssuingController>(() => IssuingController());
   }

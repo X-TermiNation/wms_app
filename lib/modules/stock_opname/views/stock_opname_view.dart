@@ -1,12 +1,17 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../application/constants/app_colors.dart';
-import '../../../services/scanner/scanner_service.dart';
+import '../../../common/helpers/api_feedback.dart';
 import '../../../common/widgets/app_search_field.dart';
 import '../../../common/widgets/app_status_badge.dart';
-import '../../products/models/product_model.dart';
+import '../../../common/widgets/document_widgets.dart';
+import '../../../common/widgets/scan_widgets.dart';
+import '../../../data/models/inventory_models.dart';
+import '../../../data/repositories/inventory_repository.dart';
+import '../../../services/api/api_client.dart';
+import '../../../services/auth/warehouse_context.dart';
+import '../../../services/scanner/scanner_service.dart';
 import '../controllers/stock_opname_controller.dart';
 import '../models/stock_opname_model.dart';
 
@@ -14,763 +19,315 @@ class StockOpnameView extends GetView<StockOpnameController> {
   const StockOpnameView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text(
-          'Stock Opname',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        onPressed: () => _OpnameForm.show(controller),
-        icon: const Icon(Icons.add),
-        label: const Text('Opname Baru'),
-      ),
-      body: Obx(
-        () => ListView(
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(title: const Text('Stock Opname', style: TextStyle(fontWeight: FontWeight.w700))),
+    floatingActionButton: FloatingActionButton.extended(
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      onPressed: () => Get.to(() => const OpnameFormPage()),
+      icon: const Icon(Icons.fact_check_outlined),
+      label: const Text('Hitung Lokasi'),
+    ),
+    body: RefreshIndicator(
+      onRefresh: controller.fetchRecords,
+      child: Obx(() {
+        final rows = controller.filteredRecords;
+        return ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
           children: [
-            _summary(),
-            const SizedBox(height: 18),
-
-            const Text(
-              'Riwayat Stock Opname',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+            SummaryBanner(
+              icon: Icons.fact_check_outlined,
+              title: 'Stock opname ${WarehouseContext.instance.activeName}',
+              value: '${controller.draftCount} menunggu persetujuan',
+              subtitle: '${controller.completedCount} disetujui • ${controller.totalDifferences} baris berselisih',
             ),
+            const SizedBox(height: 14),
+            AppSearchField(hint: 'Cari nomor atau lokasi...', controller: controller.searchController, onChanged: controller.updateSearch),
             const SizedBox(height: 10),
-
-            AppSearchField(
-              hint: 'Cari nomor atau gudang...',
-              controller: controller.searchController,
-              onChanged: controller.updateSearch,
-            ),
+            StatusFilterChips(options: const ['Semua', 'Draft', 'Completed', 'Cancelled'], selected: controller.selectedStatus),
             const SizedBox(height: 8),
-
-            SizedBox(
-              height: 38,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: ['Semua', 'Draft', 'Completed', 'Cancelled']
-                    .map(
-                      (status) => Padding(
-                        padding: const EdgeInsets.only(right: 7),
-                        child: ChoiceChip(
-                          label: Text(
-                            status,
-                            style: const TextStyle(fontSize: 10),
-                          ),
-                          selected: controller.selectedStatus.value == status,
-                          selectedColor: AppColors.softOrange,
-                          onSelected: (_) {
-                            controller.selectedStatus.value = status;
-                          },
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-
-            if (controller.filteredRecords.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 45),
-                child: Center(child: Text('Belum ada data stock opname.')),
-              )
+            if (rows.isEmpty && controller.isLoading.value)
+              const Padding(padding: EdgeInsets.all(30), child: Center(child: CircularProgressIndicator()))
+            else if (rows.isEmpty)
+              const EmptyState(message: 'Belum ada stock opname.', icon: Icons.fact_check_outlined)
             else
-              ...controller.filteredRecords.map(
-                (record) => _OpnameCard(
-                  record: record,
-                  onTap: () => _detail(record),
-                  onAction: (action) {
-                    if (action == 'complete') {
-                      _confirm(record);
-                    } else if (action == 'cancel') {
-                      controller.cancel(record);
-                    } else if (action == 'delete') {
-                      controller.deleteDraft(record);
-                    }
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // SUMMARY
-  Widget _summary() {
-    return Obx(
-      () => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.darkOrange],
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.fact_check_outlined,
-              color: Colors.white,
-              size: 38,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Stock Opname Selesai',
-                    style: TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
-                  Text(
-                    '${controller.completedCount} transaksi',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    '${controller.totalDifferences} item memiliki selisih',
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
-                  ),
+              ...rows.map((r) => DocumentCard(
+                icon: Icons.fact_check_outlined,
+                number: r.number,
+                date: StockOpnameController.formatDate(r.date),
+                statusLabel: StockOpnameController.statusLabel(r.status),
+                statusColor: StockOpnameController.statusColor(r.status),
+                title: 'Lokasi ${r.locationCode ?? '-'}',
+                subtitle: '${r.items.length} baris • ${r.items.where((i) => i.difference != 0).length} berselisih',
+                trailing: '${r.totalDifference > 0 ? '+' : ''}${r.totalDifference}',
+                onTap: () => _detail(controller, r),
+                menu: [
+                  if (r.status == OpnameStatus.draft && controller.canApprove) const PopupMenuItem(value: 'complete', child: Text('Setujui & sesuaikan stok')),
+                  if (r.status == OpnameStatus.draft) const PopupMenuItem(value: 'cancel', child: Text('Batalkan')),
+                  if (r.status == OpnameStatus.draft) const PopupMenuItem(value: 'delete', child: Text('Hapus draft')),
                 ],
-              ),
-            ),
+                onMenu: (a) => _action(controller, r, a),
+              )),
           ],
-        ),
-      ),
-    );
-  }
+        );
+      }),
+    ),
+  );
+}
 
-  // CONFIRM COMPLETE
-  void _confirm(StockOpnameModel record) {
-    Get.dialog(
-      AlertDialog(
-        title: const Text('Selesaikan stock opname?'),
-        content: const Text(
-          'Stok sistem akan disesuaikan dengan jumlah fisik yang dicatat.',
-        ),
-        actions: [
-          TextButton(onPressed: () => Get.back(), child: const Text('Kembali')),
-          FilledButton(
-            onPressed: () {
-              Get.back();
-              controller.complete(record);
-            },
-            child: const Text('Selesaikan'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // DETAIL
-  void _detail(StockOpnameModel record) {
-    Get.bottomSheet(
-      Container(
-        constraints: BoxConstraints(maxHeight: Get.height * 0.82),
-        padding: const EdgeInsets.all(18),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            const Text(
-              'Detail Stock Opname',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-
-            _line('Nomor', record.number),
-            _line('Tanggal', StockOpnameController.formatDate(record.date)),
-            _line('Gudang', record.warehouseName),
-            _line('Status', StockOpnameController.statusLabel(record.status)),
-
-            const Divider(height: 24),
-
-            const Text(
-              'Hasil Perhitungan',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-
-            ...record.items.map(
-              (item) => Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.all(11),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.productName,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'SKU: ${item.sku}',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Sistem: ${item.systemStock} ${item.unit}',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                        ),
-                        Expanded(
-                          child: Text(
-                            'Fisik: ${item.physicalStock} ${item.unit}',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Selisih: '
-                      '${item.difference > 0 ? '+' : ''}'
-                      '${item.difference}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: item.difference == 0
-                            ? AppColors.success
-                            : item.difference > 0
-                            ? AppColors.info
-                            : AppColors.danger,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            if (record.notes.isNotEmpty) _line('Catatan', record.notes),
-          ],
-        ),
-      ),
-      isScrollControlled: true,
-    );
-  }
-
-  // DETAIL ROW
-  static Widget _line(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 95,
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.black54, fontSize: 11),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
+Future<void> _action(StockOpnameController c, StockOpnameModel r, String action) async {
+  switch (action) {
+    case 'complete':
+      if (await confirmAction(
+        title: 'Setujui stock opname?',
+        message: 'Stok ${r.items.where((i) => i.difference != 0).length} baris akan disesuaikan dengan hasil fisik. Jika stok sistem sudah berubah sejak dihitung, persetujuan ditolak.',
+        confirmLabel: 'Setujui',
+      )) {
+        await c.complete(r);
+      }
+    case 'cancel':
+      if (await confirmAction(title: 'Batalkan opname?', message: '${r.number} dibatalkan tanpa mengubah stok.', confirmLabel: 'Batalkan', danger: true)) {
+        await c.cancel(r);
+      }
+    case 'delete':
+      if (await confirmAction(title: 'Hapus draft?', message: '${r.number} akan dihapus.', confirmLabel: 'Hapus', danger: true)) {
+        await c.deleteDraft(r);
+      }
   }
 }
 
-// ============================================================
-// STOCK OPNAME CARD
-// ============================================================
+void _detail(StockOpnameController c, StockOpnameModel r) {
+  showDetailSheet(
+    title: 'Detail Stock Opname',
+    badge: AppStatusBadge(label: StockOpnameController.statusLabel(r.status), color: StockOpnameController.statusColor(r.status)),
+    children: [
+      InfoRow('Nomor', r.number, bold: true),
+      InfoRow('Tanggal', StockOpnameController.formatDate(r.date)),
+      InfoRow('Gudang', r.warehouseName),
+      InfoRow('Lokasi', r.locationCode ?? '-'),
+      if (r.notes.isNotEmpty) InfoRow('Catatan', r.notes),
+      const SectionTitle('Hasil hitung'),
+      ...r.items.map((i) => ItemLine(
+        title: '${i.productName} • ${i.batchNumber ?? '-'}',
+        subtitle: '${i.locationCode ?? '-'} • ${InventoryStatus.shortLabel(i.inventoryStatus ?? '-')} • Sistem ${i.systemStock} / Fisik ${i.physicalStock}',
+        trailing: '${i.difference > 0 ? '+' : ''}${i.difference}',
+      )),
+    ],
+    actions: r.status == OpnameStatus.draft && c.canApprove
+        ? [
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+              onPressed: () { Get.back(); _action(c, r, 'complete'); },
+              child: const Text('Setujui & Sesuaikan'),
+            ),
+          ]
+        : const [],
+  );
+}
 
-class _OpnameCard extends StatelessWidget {
-  const _OpnameCard({
-    required this.record,
-    required this.onTap,
-    required this.onAction,
-  });
+class _CountLine {
+  _CountLine({required this.lotId, required this.batchNumber, required this.productId, required this.productName,
+      required this.sku, required this.unit, required this.status, required this.system, this.expiry});
+  final String lotId, batchNumber, productId, productName, sku, unit;
+  String status;
+  int system;
+  int physical = 0;
+  final DateTime? expiry;
+}
 
-  final StockOpnameModel record;
-  final VoidCallback onTap;
-  final ValueChanged<String> onAction;
+/// Hitung fisik satu lokasi: scan lokasi -> scan batch (scan ulang = +1).
+class OpnameFormPage extends StatefulWidget {
+  const OpnameFormPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 0,
-      margin: const EdgeInsets.only(top: 9),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: AppColors.border),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.all(13),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.fact_check_outlined,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 8),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          record.number,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        Text(
-                          StockOpnameController.formatDate(record.date),
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.black54,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  AppStatusBadge(
-                    label: StockOpnameController.statusLabel(record.status),
-                    color: StockOpnameController.statusColor(record.status),
-                  ),
-
-                  PopupMenuButton<String>(
-                    onSelected: onAction,
-                    itemBuilder: (_) => [
-                      if (record.status == OpnameStatus.draft)
-                        const PopupMenuItem(
-                          value: 'complete',
-                          child: Text('Terapkan hasil'),
-                        ),
-                      if (record.status == OpnameStatus.draft)
-                        const PopupMenuItem(
-                          value: 'cancel',
-                          child: Text('Batalkan'),
-                        ),
-                      if (record.status == OpnameStatus.draft)
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Hapus draft'),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      record.warehouseName,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${record.items.length} produk • '
-                    '${record.totalDifference > 0 ? '+' : ''}'
-                    '${record.totalDifference} selisih',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.charcoal,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  State<OpnameFormPage> createState() => _OpnameFormPageState();
 }
 
-// ============================================================
-// STOCK OPNAME FORM
-// ============================================================
-
-class _OpnameForm extends StatefulWidget {
-  const _OpnameForm({required this.c});
-
-  final StockOpnameController c;
-
-  static void show(StockOpnameController c) {
-    Get.dialog(_OpnameForm(c: c), barrierDismissible: false);
-  }
-
-  @override
-  State<_OpnameForm> createState() => _OpnameFormState();
-}
-
-class _OpnameFormState extends State<_OpnameForm> {
-  String? warehouseId;
-
-  final TextEditingController notes = TextEditingController();
-  final List<_OpnameDraft> rows = [];
-  StreamSubscription<String>? _scannerSubscription;
-
-  late DateTime date;
-
-  StockOpnameController get c => widget.c;
+class _OpnameFormPageState extends State<OpnameFormPage> {
+  final c = Get.find<StockOpnameController>();
+  final notes = TextEditingController();
+  final idempotencyKey = ApiClient.instance.newIdempotencyKey();
+  final lines = <_CountLine>[];
+  LocationInfo? location;
+  List<InventoryBalance> systemBalances = const [];
+  ScanRegistration? _scan;
 
   @override
   void initState() {
     super.initState();
-
-    final activeWarehouses = c.warehouses.warehouses
-        .where((warehouse) => warehouse.isActive)
-        .toList();
-
-    warehouseId = activeWarehouses.isNotEmpty
-        ? activeWarehouses.first.id
-        : null;
-
-    date = DateTime.now();
-    _scannerSubscription = ScannerService.instance.listen(_handleBarcode, onError: (error) {
-      Get.snackbar('Scanner error', 'Tidak dapat menerima hasil scan: $error');
-    });
-  }
-
-  void _handleBarcode(String barcode) {
-    final product = c.products.products.firstWhereOrNull(
-      (item) => item.barcode.trim().toLowerCase() == barcode.trim().toLowerCase() ||
-          item.sku.trim().toLowerCase() == barcode.trim().toLowerCase(),
-    );
-    if (product == null) {
-      Get.snackbar('Produk tidak ditemukan', 'Barcode: $barcode', snackPosition: SnackPosition.BOTTOM);
-      return;
-    }
-    final existing = rows.firstWhereOrNull((row) => row.product.id == product.id);
-    setState(() {
-      if (existing != null) {
-        final current = int.tryParse(existing.qty.text) ?? 0;
-        existing.qty.text = (current + 1).toString();
-      } else {
-        rows.add(_OpnameDraft(product, TextEditingController(text: '1')));
-      }
-    });
-    Get.snackbar('Produk terhitung', '${product.name} · Total fisik: ${existing == null ? 1 : (int.tryParse(existing.qty.text) ?? 1)}', snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 1));
-  }
-
-  // ADD PRODUCT
-  void add() {
-    final availableProducts = c.products.products
-        .where((product) => !rows.any((row) => row.product.id == product.id))
-        .toList();
-
-    if (availableProducts.isEmpty) {
-      Get.snackbar(
-        'Informasi',
-        'Semua produk sudah ditambahkan.',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
-    final product = availableProducts.first;
-
-    setState(() {
-      rows.add(
-        _OpnameDraft(
-          product,
-          TextEditingController(text: product.stock.toString()),
-        ),
-      );
-    });
-  }
-
-  // SAVE DRAFT
-  void save() {
-    final items = rows.map((row) {
-      return StockOpnameItemModel(
-        productId: row.product.id,
-        productName: row.product.name,
-        sku: row.product.sku,
-        unit: row.product.unit,
-        systemStock: row.product.stock,
-        physicalStock: int.tryParse(row.qty.text) ?? -1,
-      );
-    }).toList();
-
-    final success = c.createOpname(
-      warehouseId: warehouseId ?? '',
-      date: date,
-      items: items,
-      notes: notes.text,
-    );
-
-    if (success) {
-      Get.back();
-    }
-  }
-
-  // REMOVE PRODUCT
-  void removeRow(int index) {
-    if (index < 0 || index >= rows.length) return;
-
-    final removed = rows.removeAt(index);
-    removed.qty.dispose();
-
-    setState(() {});
+    _scan = ScannerService.instance.register(_onScan, label: 'Stock opname');
   }
 
   @override
   void dispose() {
-    _scannerSubscription?.cancel();
+    _scan?.cancel();
     notes.dispose();
-
-    for (final row in rows) {
-      row.qty.dispose();
-    }
-
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.all(14),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: (MediaQuery.of(context).size.height - MediaQuery.of(context).viewInsets.bottom - 32).clamp(140.0, Get.height * 0.88).toDouble(),
-          maxWidth: 520,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(17),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Stock Opname Baru',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 12),
+  int _systemQty(String lotId, String status) =>
+      systemBalances.where((b) => b.lotId == lotId && b.status == status).fold(0, (s, b) => s + b.quantity);
 
-              Expanded(
-                child: ListView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 12),
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: warehouseId,
-                      decoration: const InputDecoration(
-                        labelText: 'Gudang',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      items: c.warehouses.warehouses
-                          .where((warehouse) => warehouse.isActive)
-                          .map(
-                            (warehouse) => DropdownMenuItem<String>(
-                              value: warehouse.id,
-                              child: Text(warehouse.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          warehouseId = value;
-                        });
-                      },
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      decoration: BoxDecoration(color: AppColors.softOrange, borderRadius: BorderRadius.circular(10)),
-                      child: const Row(children: [
-                        Icon(Icons.qr_code_scanner, color: AppColors.darkOrange),
-                        SizedBox(width: 8),
-                        Expanded(child: Text('Scan setiap unit produk. Setiap scan menambah stok fisik sebanyak 1.', style: TextStyle(fontSize: 12))),
-                      ]),
-                    ),
-                    const SizedBox(height: 10),
-
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: Text(
-                            'Hitung stok fisik',
-                            style: TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        TextButton.icon(
-                          onPressed: add,
-                          icon: const Icon(Icons.add, size: 17),
-                          label: const Text('Tambah Produk'),
-                        ),
-                      ],
-                    ),
-
-                    ...rows.asMap().entries.map(
-                      (entry) => _row(entry.key, entry.value),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    TextField(
-                      controller: notes,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Catatan (opsional)',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Get.back(),
-                      child: const Text('Batal'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                      ),
-                      onPressed: save,
-                      child: const Text(
-                        'Simpan Draft',
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  Future<void> _onScan(String code) async {
+    try {
+      final result = await InventoryRepository.instance.scan(code, warehouseId: c.warehouseId);
+      if (result.type == ScanType.location) {
+        if (lines.isNotEmpty && location != null && result.location!.id != location!.id) {
+          throw const ApiException('Satu opname untuk satu lokasi. Simpan hitungan lokasi ini terlebih dahulu.');
+        }
+        final balances = await InventoryRepository.instance.balances(warehouseId: c.warehouseId, locationId: result.location!.id);
+        setState(() {
+          location = result.location;
+          systemBalances = balances;
+        });
+        ScanFeedback.success();
+        return;
+      }
+      if (location == null) throw const ApiException('Scan barcode lokasi terlebih dahulu.');
+      if (result.type == ScanType.product) {
+        throw const ApiException('Scan barcode batch (label batch internal) agar stok terhitung per batch.');
+      }
+      final batch = result.batch!;
+      final existing = lines.where((l) => l.lotId == batch.id).toList();
+      if (existing.isNotEmpty) {
+        setState(() => existing.last.physical++);
+        ScanFeedback.success();
+        return;
+      }
+      final statusesHere = systemBalances.where((b) => b.lotId == batch.id).map((b) => b.status).toSet().toList();
+      final status = statusesHere.isEmpty ? InventoryStatus.available : statusesHere.first;
+      setState(() => lines.add(_CountLine(
+        lotId: batch.id, batchNumber: batch.batchNumber, productId: batch.productId, productName: batch.productName,
+        sku: batch.sku, unit: batch.unit, status: status, system: _systemQty(batch.id, status), expiry: batch.expiryDate,
+      )..physical = 1));
+      ScanFeedback.success();
+    } on ApiException catch (e) {
+      ScanFeedback.error();
+      Get.snackbar('Stock opname', e.message, snackPosition: SnackPosition.BOTTOM);
+    } catch (e) {
+      ScanFeedback.error();
+      showApiError(e);
+    }
   }
 
-  // PRODUCT ROW
-  Widget _row(int index, _OpnameDraft row) {
+  void _addFromSystem(InventoryBalance b) {
+    if (lines.any((l) => l.lotId == b.lotId && l.status == b.status)) return;
+    setState(() => lines.add(_CountLine(
+      lotId: b.lotId, batchNumber: b.batchNumber, productId: b.productId, productName: b.productName,
+      sku: b.sku, unit: b.unit, status: b.status, system: b.quantity, expiry: b.expiryDate,
+    )));
+  }
+
+  Future<void> _save() async {
+    if (location == null || lines.isEmpty) {
+      Get.snackbar('Data belum lengkap', 'Scan lokasi dan minimal satu batch.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final keys = lines.map((l) => '${l.lotId}|${l.status}').toSet();
+    if (keys.length != lines.length) {
+      Get.snackbar('Data ganda', 'Batch dengan status yang sama hanya boleh satu baris.', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+    final uncounted = systemBalances.where((b) => !lines.any((l) => l.lotId == b.lotId && l.status == b.status)).length;
+    if (!await confirmAction(
+      title: 'Simpan hasil hitung?',
+      message: '${lines.length} baris di ${location!.code} disimpan sebagai Draft.'
+          '${uncounted > 0 ? ' $uncounted saldo sistem di lokasi ini tidak ikut dihitung.' : ''} Stok belum berubah sampai disetujui.',
+      confirmLabel: 'Simpan Draft',
+    )) {
+      return;
+    }
+    final ok = await c.createOpname(
+      locationId: location!.id,
+      date: DateTime.now(),
+      items: lines.map((l) => StockOpnameItemModel(
+        productId: l.productId, productName: l.productName, sku: l.sku, unit: l.unit,
+        systemStock: l.system, physicalStock: l.physical, lotId: l.lotId, locationId: location!.id, inventoryStatus: l.status,
+      )).toList(),
+      notes: notes.text,
+      idempotencyKey: idempotencyKey,
+    );
+    if (ok && mounted) Get.back();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: AppBar(title: const Text('Hitung Stok Lokasi', style: TextStyle(fontWeight: FontWeight.w700))),
+    bottomNavigationBar: Obx(() => BottomActionBar(label: 'Simpan Draft Opname', busy: c.isBusy.value, onPressed: lines.isEmpty ? null : _save)),
+    body: ListView(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+      children: [
+        ScanPromptCard(
+          title: '1. Scan barcode lokasi',
+          icon: Icons.location_searching_rounded,
+          done: location != null,
+          doneText: location == null ? null : 'Lokasi ${location!.code} (${LocationInfo.typeLabel(location!.type)})',
+          onReset: lines.isEmpty ? () => setState(() { location = null; systemBalances = const []; }) : null,
+        ),
+        if (location != null) ...[
+          const SizedBox(height: 10),
+          const ScanPromptCard(title: '2. Scan batch', subtitle: 'Scan ulang batch yang sama = qty fisik +1', icon: Icons.qr_code_2_rounded),
+          const SectionTitle('Hasil hitung'),
+          if (lines.isEmpty) const EmptyState(message: 'Belum ada batch dihitung.', icon: Icons.qr_code_2_rounded),
+          ...lines.asMap().entries.map((e) => _CountTile(
+            key: ObjectKey(e.value),
+            line: e.value,
+            onStatus: (s) => setState(() {
+              e.value.status = s;
+              e.value.system = _systemQty(e.value.lotId, s);
+            }),
+            onPhysical: (v) => setState(() => e.value.physical = v),
+            onRemove: () => setState(() => lines.removeAt(e.key)),
+          )),
+          SectionTitle('Saldo sistem di ${location!.code} (${systemBalances.length})'),
+          const Text('Ketuk untuk menambah baris hitung (qty fisik mulai dari 0).', style: TextStyle(fontSize: 10.5, color: Colors.black54)),
+          const SizedBox(height: 6),
+          ...systemBalances.map((b) => Padding(padding: const EdgeInsets.only(bottom: 7), child: BalanceTile(balance: b, onTap: () => _addFromSystem(b)))),
+          const SizedBox(height: 8),
+          TextField(controller: notes, maxLines: 2, decoration: const InputDecoration(labelText: 'Catatan (opsional)', border: OutlineInputBorder(), isDense: true)),
+        ],
+      ],
+    ),
+  );
+}
+
+class _CountTile extends StatelessWidget {
+  const _CountTile({super.key, required this.line, required this.onStatus, required this.onPhysical, required this.onRemove});
+  final _CountLine line;
+  final ValueChanged<String> onStatus;
+  final ValueChanged<int> onPhysical;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final diff = line.physical - line.system;
     return Container(
       margin: const EdgeInsets.only(bottom: 9),
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButtonFormField<ProductModel>(
-            value: row.product,
-            decoration: const InputDecoration(
-              labelText: 'Produk',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-            items: c.products.products.map((product) {
-              return DropdownMenuItem<ProductModel>(
-                value: product,
-                child: Text(product.name, overflow: TextOverflow.ellipsis),
-              );
-            }).toList(),
-            onChanged: (product) {
-              if (product == null) return;
-
-              setState(() {
-                row.product = product;
-                row.qty.text = product.stock.toString();
-              });
-            },
-          ),
-
-          const SizedBox(height: 7),
-
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Stok sistem: '
-                  '${row.product.stock} ${row.product.unit}',
-                  style: const TextStyle(fontSize: 11, color: Colors.black54),
-                ),
-              ),
-
-              SizedBox(
-                width: 100,
-                child: TextField(
-                  controller: row.qty,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Stok fisik',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ),
-
-              IconButton(
-                onPressed: () => removeRow(index),
-                icon: const Icon(Icons.delete_outline, color: AppColors.danger),
-              ),
-            ],
-          ),
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Expanded(child: Text('${line.productName}\n${line.batchNumber}${line.expiry == null ? '' : ' • ED ${formatDate(line.expiry)}'}',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800))),
+          IconButton(onPressed: onRemove, icon: const Icon(Icons.delete_outline, color: AppColors.danger)),
+        ]),
+        DropdownButtonFormField<String>(
+          initialValue: line.status,
+          isDense: true,
+          isExpanded: true,
+          decoration: const InputDecoration(labelText: 'Status stok yang dihitung', border: OutlineInputBorder(), isDense: true),
+          items: InventoryStatus.countable.map((s) => DropdownMenuItem(value: s, child: Text(InventoryStatus.label(s), style: const TextStyle(fontSize: 12)))).toList(),
+          onChanged: (v) { if (v != null) onStatus(v); },
+        ),
+        const SizedBox(height: 8),
+        QtyStepper(label: 'Qty fisik', value: line.physical, unit: line.unit, onChanged: onPhysical),
+        const SizedBox(height: 4),
+        Text('Sistem ${line.system} • Selisih ${diff > 0 ? '+' : ''}$diff',
+            style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800, color: diff == 0 ? AppColors.success : diff > 0 ? AppColors.info : AppColors.danger)),
+      ]),
     );
   }
-}
-
-// ============================================================
-// OPNAME DRAFT MODEL
-// ============================================================
-
-class _OpnameDraft {
-  _OpnameDraft(this.product, this.qty);
-
-  ProductModel product;
-  final TextEditingController qty;
 }

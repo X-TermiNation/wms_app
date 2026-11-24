@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Dokumentasi WMS — Aplikasi AIDC &amp; Desktop</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-left { content: "Dokumentasi WMS — Aplikasi AIDC & Desktop · v2.0"; font: 8pt 'Segoe UI', sans-serif; color: #8a8f98; }
+    @bottom-right { content: "Halaman " counter(page) " dari " counter(pages); font: 8pt 'Segoe UI', sans-serif; color: #8a8f98; }
+  }
+  @page :first { @bottom-left { content: none; } @bottom-right { content: none; } }
+  :root { --ink:#1f242b; --muted:#646b75; --line:#dfe2e6; --accent:#ea7b24; --accent-soft:#fff3e8; --blue:#2f6fb7; }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 9.6pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 19pt; margin: 0 0 4mm; color: var(--ink); break-after: avoid; }
+  h1 .num { color: var(--accent); margin-right: 3mm; }
+  h2 { font-size: 12.5pt; margin: 6mm 0 2mm; break-after: avoid; }
+  h3 { font-size: 10.5pt; margin: 4mm 0 1.5mm; break-after: avoid; color: #333a44; }
+  p { margin: 0 0 2.4mm; }
+  ul, ol { margin: 0 0 2.6mm; padding-left: 6mm; }
+  li { margin-bottom: 0.8mm; }
+  code { font-family: Consolas, 'Courier New', monospace; font-size: 8.6pt; background: #f3f4f6; padding: 0 1mm; border-radius: 2px; }
+  pre { font-family: Consolas, monospace; font-size: 8.4pt; background: #f6f7f9; border: 1px solid var(--line); border-radius: 4px; padding: 2.5mm 3mm; margin: 0 0 3mm; white-space: pre-wrap; break-inside: avoid; }
+  table { width: 100%; border-collapse: collapse; margin: 1mm 0 4mm; font-size: 8.7pt; break-inside: auto; }
+  thead { display: table-header-group; }
+  tr { break-inside: avoid; }
+  th { background: #f4f5f7; text-align: left; font-weight: 600; color: #3a414b; border-bottom: 1.5px solid #c9cdd3; padding: 1.6mm 2mm; vertical-align: bottom; }
+  td { border-bottom: 1px solid var(--line); padding: 1.5mm 2mm; vertical-align: top; }
+  td.c, th.c { text-align: center; }
+  .chapter { break-before: page; }
+  .lead { font-size: 10.5pt; color: #333a44; margin-bottom: 4mm; }
+  .note { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 2.2mm 3mm; margin: 2mm 0 4mm; break-inside: avoid; }
+  .warn { border-left: 3px solid #d14343; background: #fdf0f0; padding: 2.2mm 3mm; margin: 2mm 0 4mm; break-inside: avoid; }
+  .figure { margin: 2mm 0 4mm; break-inside: avoid; text-align: center; }
+  .figure svg { width: 100%; height: auto; }
+  .caption { font-size: 8.4pt; color: var(--muted); margin-top: 1mm; }
+  .pill { display: inline-block; padding: 0 2mm; border-radius: 8px; font-size: 8pt; font-weight: 600; }
+  .ok { background: #e5f4ea; color: #1e7a45; } .no { background: #f1f2f4; color: #6b717a; } .part { background: #fdf3e2; color: #a5650a; }
+  .cover { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; }
+  .cover .brand { font-size: 10pt; letter-spacing: 2px; color: var(--accent); font-weight: 700; }
+  .cover h1 { font-size: 30pt; line-height: 1.15; margin-top: 50mm; }
+  .cover .sub { font-size: 13pt; color: var(--muted); margin-top: 4mm; }
+  .cover .bar { height: 3mm; width: 40mm; background: var(--accent); margin-top: 8mm; }
+  .meta td { border: none; padding: 0.8mm 0; font-size: 9.5pt; }
+  .meta td:first-child { color: var(--muted); width: 45mm; }
+  .toc { list-style: none; padding: 0; font-size: 10.5pt; }
+  .toc li { display: flex; border-bottom: 1px dotted #c9cdd3; padding: 1.6mm 0; }
+  .toc li span:first-child { width: 10mm; color: var(--accent); font-weight: 700; }
+  .toc li span:last-child { color: var(--muted); margin-left: auto; font-size: 9pt; }
+  .flow { display: flex; gap: 2mm; align-items: stretch; margin: 2mm 0 4mm; break-inside: avoid; }
+  .flow div { flex: 1; border: 1.5px solid var(--accent); background: var(--accent-soft); border-radius: 4px; padding: 2mm; font-size: 8.4pt; text-align: center; }
+  .flow div b { display: block; font-size: 9.2pt; margin-bottom: 0.5mm; }
+  .flow div.erp { border-color: #6b4fbb; background: #f1edfa; } .flow div.ok2 { border-color: #1e8a4c; background: #e8f5ee; }
+</style>
+</head>
+<body>
+
+<!-- ================================================================ SAMPUL -->
+<section class="cover">
+  <div>
+    <div class="brand">MYWMS · WAREHOUSE MANAGEMENT SYSTEM</div>
+    <h1>Dokumentasi<br>Aplikasi AIDC &amp; Desktop</h1>
+    <div class="sub">Fitur, alur kerja, manual penggunaan, integrasi ERP, instalasi, dan status teknis</div>
+    <div class="bar"></div>
+  </div>
+  <table class="meta">
+    <tr><td>Versi dokumen</td><td>2.0 · 24 November 2026</td></tr>
+    <tr><td>Aplikasi AIDC</td><td>WMS Mobile (Flutter, Android, perangkat AIDC dengan scanner &amp; printer label Bluetooth)</td></tr>
+    <tr><td>Aplikasi Desktop</td><td>WMS Management (Flutter Desktop, Windows / macOS)</td></tr>
+    <tr><td>Backend</td><td>Node.js + Express, MySQL / MariaDB (migration 002 – 006)</td></tr>
+    <tr><td>Integrasi</td><td>ERP via REST (PO / SO masuk; Goods Receipt, Goods Issue, status pengiriman keluar) + ERP Simulator</td></tr>
+    <tr><td>Pembaca</td><td>Admin, supervisor, staff gudang, QC, dan tim IT</td></tr>
+  </table>
+</section>
+
+<!-- ================================================================ DAFTAR ISI -->
+<section class="chapter">
+  <h1>Daftar Isi</h1>
+  <ul class="toc">
+    <li><span>1</span><span>Ringkasan sistem dan arsitektur</span><span>Gambaran umum</span></li>
+    <li><span>2</span><span>Peran user dan hak akses</span><span>Admin, supervisor, QC, staff</span></li>
+    <li><span>3</span><span>Model stok, status, dan alur barang</span><span>Batch, lokasi, FEFO, pengiriman</span></li>
+    <li><span>4</span><span>Aplikasi AIDC</span><span>Manual per menu</span></li>
+    <li><span>5</span><span>Barang keluar: picking, packing, loading, dispatch</span><span>Alur pengiriman</span></li>
+    <li><span>6</span><span>Aplikasi Desktop (WMS Management)</span><span>Monitoring, dokumen ERP, master data</span></li>
+    <li><span>7</span><span>Laporan dan dokumen PDF</span><span>Unduh, cetak, simpan</span></li>
+    <li><span>8</span><span>Integrasi ERP</span><span>PO / SO, GR / GI, sinkronisasi</span></li>
+    <li><span>9</span><span>Skenario kerja end-to-end</span><span>Contoh lengkap</span></li>
+    <li><span>10</span><span>Instalasi dan konfigurasi</span><span>Backend, aplikasi, ERP simulator</span></li>
+    <li><span>11</span><span>Referensi teknis: API dan database</span><span>Untuk tim IT</span></li>
+    <li><span>12</span><span>Pengujian dan status</span><span>Hasil uji</span></li>
+    <li><span>13</span><span>Masalah umum dan solusi</span><span>Troubleshooting</span></li>
+    <li><span>14</span><span>Batasan dan pengembangan lanjutan</span><span>Belum tersedia</span></li>
+  </ul>
+</section>
+
+<!-- ================================================================ 1 -->
+<section class="chapter">
+  <h1><span class="num">1</span>Ringkasan Sistem dan Arsitektur</h1>
+  <p class="lead">WMS terdiri dari dua aplikasi yang memakai satu backend dan satu database, serta terhubung ke ERP. Aplikasi AIDC dipakai untuk operasional gudang berbasis scan; Desktop dipakai untuk master data, dokumen ERP, monitoring seluruh cabang, dan laporan. Semua perhitungan stok dilakukan di backend sehingga kedua aplikasi selalu menampilkan angka yang sama.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 760 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Arial" font-size="13">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a9099"/></marker></defs>
+      <rect x="24" y="24" width="220" height="100" rx="8" fill="#fff3e8" stroke="#ea7b24" stroke-width="2"/>
+      <text x="134" y="50" text-anchor="middle" font-weight="600">Aplikasi AIDC (Android)</text>
+      <text x="134" y="70" text-anchor="middle" font-size="11.5" fill="#646b75">Staff, QC, supervisor</text>
+      <text x="134" y="88" text-anchor="middle" font-size="11.5" fill="#646b75">receiving · putaway · QC · picking</text>
+      <text x="134" y="106" text-anchor="middle" font-size="11.5" fill="#646b75">packing · loading · transfer · opname</text>
+      <rect x="24" y="160" width="220" height="100" rx="8" fill="#eaf2fb" stroke="#2f6fb7" stroke-width="2"/>
+      <text x="134" y="186" text-anchor="middle" font-weight="600">Desktop (Windows/macOS)</text>
+      <text x="134" y="206" text-anchor="middle" font-size="11.5" fill="#646b75">Admin, supervisor</text>
+      <text x="134" y="224" text-anchor="middle" font-size="11.5" fill="#646b75">master data · dokumen ERP</text>
+      <text x="134" y="242" text-anchor="middle" font-size="11.5" fill="#646b75">monitoring · laporan PDF · label</text>
+      <rect x="310" y="82" width="200" height="132" rx="8" fill="#e6f2ee" stroke="#1d7a62" stroke-width="2"/>
+      <text x="410" y="110" text-anchor="middle" font-weight="600">Backend REST API</text>
+      <text x="410" y="130" text-anchor="middle" font-size="11.5" fill="#646b75">Node.js + Express · port 3000</text>
+      <text x="410" y="152" text-anchor="middle" font-size="11.5" fill="#646b75">JWT · hak akses gudang</text>
+      <text x="410" y="170" text-anchor="middle" font-size="11.5" fill="#646b75">FEFO · QC · audit trail</text>
+      <text x="410" y="188" text-anchor="middle" font-size="11.5" fill="#646b75">outbox sinkronisasi ERP</text>
+      <rect x="350" y="246" width="120" height="44" rx="8" fill="none" stroke="#8a9099" stroke-width="1.25"/>
+      <text x="410" y="273" text-anchor="middle" font-weight="600">MySQL wms_db</text>
+      <rect x="576" y="82" width="160" height="132" rx="8" fill="#f1edfa" stroke="#6b4fbb" stroke-width="2"/>
+      <text x="656" y="110" text-anchor="middle" font-weight="600">ERP</text>
+      <text x="656" y="132" text-anchor="middle" font-size="11.5" fill="#646b75">Purchase Order</text>
+      <text x="656" y="150" text-anchor="middle" font-size="11.5" fill="#646b75">Sales Order</text>
+      <text x="656" y="168" text-anchor="middle" font-size="11.5" fill="#646b75">menerima GR / GI</text>
+      <text x="656" y="186" text-anchor="middle" font-size="11.5" fill="#646b75">&amp; status pengiriman</text>
+      <rect x="320" y="14" width="180" height="40" rx="8" fill="none" stroke="#ea7b24" stroke-width="1.25"/>
+      <text x="410" y="38" text-anchor="middle" font-size="12">Printer label Bluetooth</text>
+      <path d="M244 74H280V120H308" fill="none" stroke="#8a9099" stroke-width="1.25" marker-end="url(#a1)"/>
+      <path d="M244 210H280V176H308" fill="none" stroke="#8a9099" stroke-width="1.25" marker-end="url(#a1)"/>
+      <path d="M410 214V244" fill="none" stroke="#8a9099" stroke-width="1.25" marker-end="url(#a1)"/>
+      <path d="M574 124H512" fill="none" stroke="#6b4fbb" stroke-width="1.25" marker-end="url(#a1)"/>
+      <path d="M512 172H574" fill="none" stroke="#1d7a62" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#a1)"/>
+      <path d="M244 38H318" fill="none" stroke="#ea7b24" stroke-width="1.25" marker-end="url(#a1)"/>
+      <text x="543" y="117" text-anchor="middle" font-size="10.5" fill="#6b4fbb">PO / SO</text>
+      <text x="543" y="190" text-anchor="middle" font-size="10.5" fill="#1d7a62">GR · GI</text>
+      <text x="270" y="64" text-anchor="middle" font-size="11" fill="#646b75">Wi-Fi</text>
+    </svg>
+    <div class="caption">Gambar 1. Arsitektur: dua aplikasi, satu backend, satu database, terhubung ke ERP.</div>
+  </div>
+
+  <table>
+    <thead><tr><th style="width:18%">Komponen</th><th style="width:20%">Pengguna</th><th>Tanggung jawab</th></tr></thead>
+    <tbody>
+      <tr><td><b>Aplikasi AIDC</b></td><td>Staff gudang, QC, supervisor</td><td>Receiving (dari PO / Tally, scan, tanpa barcode, kemasan, barang belum terdaftar), putaway, QC, picking dari SO (FEFO), packing ke koli, loading &amp; dispatch, POD, transfer, stock opname, cetak label Bluetooth, riwayat, lookup.</td></tr>
+      <tr><td><b>Desktop</b></td><td>Admin, supervisor</td><td>Master data &amp; barcode, registrasi produk tertunda, dokumen PO/SO ERP, monitoring stok/batch/QC/transaksi/pengiriman, sinkronisasi ERP, persetujuan opname, laporan dan dokumen PDF, cetak label.</td></tr>
+      <tr><td><b>Backend</b></td><td>Kedua aplikasi &amp; ERP</td><td>Satu-satunya tempat perubahan stok. Memvalidasi role dan akses gudang, menjalankan FEFO, mencatat audit trail, mencegah transaksi ganda, menyimpan dan mengirim event ke ERP.</td></tr>
+      <tr><td><b>ERP</b></td><td>Pembelian, penjualan, akuntansi</td><td>Mengirim PO dan SO; menerima Goods Receipt, Goods Issue, dan status pengiriman (dikemas, dikirim, diterima).</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Prinsip utama</h2>
+  <ul>
+    <li><b>Scan-first.</b> Setiap transaksi di Aplikasi AIDC dimulai dari scan barcode item, batch, lokasi, dokumen, atau koli.</li>
+    <li><b>Satu master item global.</b> Produk, SKU, dan barcode didaftarkan dari Desktop. Barang belum terdaftar dicatat sementara lalu diregistrasi admin.</li>
+    <li><b>Stok per batch × gudang × lokasi × status.</b> Nomor batch tidak berubah ketika barang berpindah lokasi atau status.</li>
+    <li><b>Hanya stok AVAILABLE yang belum kedaluwarsa</b> yang boleh dikeluarkan atau ditransfer (FEFO).</li>
+    <li><b>Gudang tidak menunggu ERP.</b> Data untuk ERP disimpan di antrean (outbox) dan dikirim ulang otomatis bila ERP tidak tersedia.</li>
+    <li><b>Semua perubahan tercatat</b> di riwayat pergerakan (siapa, kapan, dari mana ke mana, status lama dan baru).</li>
+  </ul>
+</section>
+
+<!-- ================================================================ 2 -->
+<section class="chapter">
+  <h1><span class="num">2</span>Peran User dan Hak Akses</h1>
+  <p class="lead">Hak akses ditentukan oleh role dan daftar gudang yang diberikan admin. Backend memeriksa keduanya di setiap transaksi, sehingga permintaan ke gudang yang bukan aksesnya selalu ditolak.</p>
+  <table>
+    <thead><tr><th style="width:14%">Role</th><th>Aplikasi AIDC</th><th>Desktop</th><th style="width:18%">Akses gudang</th></tr></thead>
+    <tbody>
+      <tr><td><b>Admin</b></td><td>Semua menu</td><td>Semua menu; satu-satunya yang boleh mengubah master data, user, dan mengirim ulang event ERP</td><td>Semua gudang</td></tr>
+      <tr><td><b>Supervisor</b></td><td>Semua menu operasional, QC inspection &amp; disposisi</td><td>Monitoring, dokumen ERP (dokumen manual, short close), laporan, setujui/batalkan opname; master data hanya baca</td><td>Gudang yang diberikan</td></tr>
+      <tr><td><b>QC</b></td><td>Operasional + QC inspection &amp; disposisi</td><td>Tidak dapat login</td><td>Gudang yang diberikan</td></tr>
+      <tr><td><b>Staff</b></td><td>Receiving, putaway, QC transfer/release, picking, packing, loading, dispatch, transfer, hitung opname</td><td>Tidak dapat login</td><td>Gudang yang diberikan</td></tr>
+    </tbody>
+  </table>
+  <table>
+    <thead><tr><th>Tindakan</th><th class="c">Admin</th><th class="c">Supervisor</th><th class="c">QC</th><th class="c">Staff</th></tr></thead>
+    <tbody>
+      <tr><td>Daftar / ubah produk, SKU, barcode; registrasi produk tertunda</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+      <tr><td>Kelola cabang, gudang, lokasi, kategori, satuan, supplier, user</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+      <tr><td>Receiving, putaway, picking, packing, loading, dispatch, POD, transfer, hitung opname</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td></tr>
+      <tr><td>QC inspection dan disposisi barang reject</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+      <tr><td>Setujui stock opname; dokumen manual &amp; short close PO/SO</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+      <tr><td>Kirim ulang event sinkronisasi ERP</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+      <tr><td>Laporan manajemen &amp; PDF (Desktop)</td><td class="c"><span class="pill ok">Ya</span></td><td class="c"><span class="pill part">Gudangnya</span></td><td class="c"><span class="pill no">Tidak</span></td><td class="c"><span class="pill no">Tidak</span></td></tr>
+    </tbody>
+  </table>
+  <div class="note">User tanpa akses gudang tetap bisa login, tetapi tidak dapat melakukan transaksi apa pun. Akun dibuat admin dari Desktop → <b>User &amp; Hak Akses</b>.
+  Akun uji: <code>superadmin / superadmin123</code>, <code>petugas.utama / petugas123</code> (Gudang Utama), <code>petugas.sby / petugas123</code> (Gudang Surabaya).</div>
+</section>
+
+<!-- ================================================================ 3 -->
+<section class="chapter">
+  <h1><span class="num">3</span>Model Stok, Status, dan Alur Barang</h1>
+  <p class="lead">Setiap stok dicatat per batch, gudang, lokasi, dan status. Batch dibuat sekali saat receiving dan membawa barcode sendiri (contoh <code>B261113-0001</code>), lot supplier, dan tanggal kedaluwarsa.</p>
+
+  <h2>Status stok</h2>
+  <table>
+    <thead><tr><th style="width:20%">Status</th><th>Arti</th><th style="width:22%">Lokasi umum</th><th style="width:16%">Boleh keluar?</th></tr></thead>
+    <tbody>
+      <tr><td><code>RECEIVED</code></td><td>Baru diterima, menunggu putaway ke rak</td><td>RECEIVING</td><td>Tidak</td></tr>
+      <tr><td><code>QC_PENDING</code></td><td>Menunggu pemeriksaan QC</td><td>QC-HOLD</td><td>Tidak</td></tr>
+      <tr><td><code>QC_IN_PROGRESS</code></td><td>Sedang diperiksa</td><td>QC-INSPECTION</td><td>Tidak</td></tr>
+      <tr><td><code>QC_PASSED</code></td><td>Lolos QC, menunggu release ke rak</td><td>QC-PASS</td><td>Tidak</td></tr>
+      <tr><td><code>QC_HOLD</code></td><td>Ditahan, perlu pemeriksaan ulang</td><td>QC-HOLD</td><td>Tidak</td></tr>
+      <tr><td><code>QC_REJECTED</code></td><td>Gagal QC, menunggu tindak lanjut</td><td>QC-REJECT</td><td>Tidak</td></tr>
+      <tr><td><code>AVAILABLE</code></td><td>Siap dipakai</td><td>Rak (STORAGE)</td><td><b>Ya</b>, jika belum kedaluwarsa</td></tr>
+      <tr><td><code>IN_TRANSIT</code></td><td>Dalam perjalanan ke gudang lain</td><td>TRANSIT gudang tujuan</td><td>Tidak</td></tr>
+    </tbody>
+  </table>
+  <p>Setiap gudang otomatis memiliki lokasi sistem RECEIVING, QC-HOLD, QC-INSPECTION, QC-PASS, QC-REJECT, QC-QUARANTINE, dan TRANSIT. Barcode lokasi berformat <code>&lt;KODE-GUDANG&gt;-&lt;KODE&gt;</code>, misalnya <code>WH-SBY-001-A-01-02</code>; saat scan, kode pendek <code>A-01-02</code> juga diterima di gudang aktif.</p>
+
+  <h2>Alur barang</h2>
+  <div class="flow">
+    <div class="erp"><b>PO dari ERP</b>dokumen inbound</div>
+    <div><b>Receiving</b>Tally PO · batch dibuat</div>
+    <div><b>QC</b>bila wajib QC</div>
+    <div><b>Putaway</b>ke rak</div>
+    <div class="ok2"><b>AVAILABLE</b>stok siap keluar</div>
+  </div>
+  <div class="flow">
+    <div class="erp"><b>SO dari ERP</b>dokumen outbound</div>
+    <div><b>Picking</b>FEFO · stok berkurang</div>
+    <div><b>Packing</b>koli berlabel CTN</div>
+    <div><b>Loading</b>scan koli ke kendaraan</div>
+    <div class="ok2"><b>Dispatch → POD</b>Goods Issue ke ERP</div>
+  </div>
+  <p>Proses pendukung: <b>transfer antar gudang</b> (AVAILABLE → IN_TRANSIT → gudang tujuan), <b>stock opname</b> (draft lalu disetujui), <b>disposisi QC</b> (retur, scrap, rework), dan <b>temporary receiving</b> untuk barang yang barcode-nya belum terdaftar.</p>
+
+  <h2>FEFO</h2>
+  <p>FEFO (First Expired, First Out): saat picking atau transfer, backend memilih batch AVAILABLE dengan tanggal kedaluwarsa paling dekat lebih dulu. Batch tanpa tanggal kedaluwarsa dipakai paling akhir, berurutan dari yang diterima paling awal. Batch yang sudah kedaluwarsa dan stok berstatus QC tidak pernah dipilih. Alokasi batch × lokasi disimpan dan menjadi acuan saat packing.</p>
+</section>
+
+<!-- ================================================================ 4 -->
+<section class="chapter">
+  <h1><span class="num">4</span>Aplikasi AIDC</h1>
+  <p class="lead">Aplikasi AIDC dipakai dengan pola <b>scan → isi qty → konfirmasi</b>. Tombol scan fisik membaca barcode item, batch, lokasi, dokumen, atau koli; setiap halaman juga punya tombol <i>Ketik manual</i> untuk barcode yang rusak.</p>
+
+  <h2>4.1 Login dan beranda</h2>
+  <ol>
+    <li>Buka aplikasi, isi username dan password, tekan <b>Masuk ke Aplikasi</b>. Alamat server diatur lewat <b>Pengaturan Server</b> di halaman login.</li>
+    <li>Pilih <b>gudang aktif</b> di bagian atas beranda. Semua transaksi berlaku untuk gudang ini.</li>
+    <li>Pastikan indikator koneksi menunjukkan <b>Online</b>. Saat Offline transaksi tidak tersimpan.</li>
+    <li>Beranda menampilkan stok Available, Dalam QC, Transit masuk, dan batch ED ≤ 30 hari. Badge angka pada menu menunjukkan antrean: PO/SO terbuka, batch menunggu putaway, QC, issuing terbuka, menunggu packing, packing siap dimuat, transfer, dan opname draft.</li>
+    <li>Ikon printer di kanan atas membuka pengaturan printer label Bluetooth (ESC/POS, 50 × 30 mm).</li>
+  </ol>
+
+  <h2>4.2 Aturan scan</h2>
+  <ul>
+    <li>Scan barcode yang sama dalam 0,5 detik dianggap pantulan dan diabaikan.</li>
+    <li>Saat dialog terbuka, hasil scan masuk ke dialog tersebut, bukan ke halaman di belakangnya.</li>
+    <li>Barcode yang dikenali: barcode internal (EAN-13), SKU, barcode supplier/GTIN alternatif, barcode kemasan (karton/box, dikalikan konversi), batch, lokasi, GS1 (GTIN + lot + expiry), label sementara <code>TMP…</code>, nomor PO/SO, dan label koli <code>CTN…</code>.</li>
+  </ul>
+
+  <h2>4.3 Menu dan langkah penggunaan</h2>
+  <table>
+    <thead><tr><th style="width:13%">Menu</th><th style="width:18%">Kegunaan</th><th>Langkah</th><th style="width:22%">Hasil pada stok</th></tr></thead>
+    <tbody>
+      <tr><td><b>Receiving</b></td><td>Menerima barang</td><td><b>Terima dari PO (Tally)</b>: scan/pilih PO → scan barang (panel dihitung / sisa PO) → ED → Confirm. Mode lain: <b>Scan Barcode</b>, <b>Tanpa Barcode</b> (pilih produk, + / −), <b>Package / Bulk</b> (karton, sak, kg), <b>Barang belum terdaftar</b> (foto + label TMP). Cetak label batch.</td><td>Batch dibuat. Biasa: RECEIVED @ RECEIVING. Wajib QC: QC_PENDING @ QC-HOLD. Dari PO: qty dicatat + Goods Receipt.</td></tr>
+      <tr><td><b>Putaway</b></td><td>Barang diterima → rak</td><td>Scan batch → scan rak (label atau kode pendek) → qty (boleh sebagian) → konfirmasi.</td><td>RECEIVED → AVAILABLE di rak.</td></tr>
+      <tr><td><b>QC Transfer</b></td><td>Memindahkan barang ke area QC</td><td>Scan batch → pilih QC-HOLD atau QC-INSPECTION → qty → konfirmasi.</td><td>QC_PENDING / QC_IN_PROGRESS.</td></tr>
+      <tr><td><b>QC Inspection</b></td><td>Pemeriksaan (QC, supervisor, admin)</td><td>Scan batch → jumlah PASS / FAIL / HOLD (boleh parsial) → alasan untuk FAIL dan HOLD → simpan.</td><td>PASS → QC_PASSED; FAIL → QC_REJECTED; HOLD → QC_HOLD.</td></tr>
+      <tr><td><b>QC Release</b></td><td>Barang lolos QC → rak</td><td>Scan batch → scan rak STORAGE → qty → konfirmasi.</td><td>QC_PASSED → AVAILABLE.</td></tr>
+      <tr><td><b>QC Hold</b></td><td>Barang yang ditahan</td><td>Pilih batch → <b>Recheck</b> → isi hasil pemeriksaan ulang.</td><td>Riwayat QC lama tetap tersimpan.</td></tr>
+      <tr><td><b>QC Rejected</b></td><td>Tindak lanjut barang gagal</td><td>Pilih batch → retur ke supplier, scrap, rework, atau periksa ulang → alasan.</td><td>Keluar dari stok, atau kembali ke QC.</td></tr>
+      <tr><td><b>Issuing</b></td><td>Picking barang keluar</td><td><b>Dari Sales Order (Picking)</b>: scan/pilih SO → scan item (FEFO) atau batch → <b>Simpan &amp; Keluarkan</b> → <b>Lanjut Packing</b>. Mode <b>Manual</b> untuk kebutuhan internal.</td><td>AVAILABLE berkurang; batch &amp; lokasi FEFO ditampilkan.</td></tr>
+      <tr><td><b>Packing</b></td><td>Mengemas ke koli</td><td>Pilih dari <i>Siap packing</i> → scan barang/batch ke koli aktif → tutup koli &amp; buka koli baru → isi berat → <b>Selesai Packing</b> → cetak label koli.</td><td>Tidak mengubah stok; tahap PACKED.</td></tr>
+      <tr><td><b>Loading</b></td><td>Muat, dispatch, POD</td><td><b>Shipment baru</b> (kendaraan, sopir) → scan label koli → <b>Dispatch</b> + no. segel → setelah sampai <b>Konfirmasi Diterima (POD)</b>.</td><td>Tahap LOADED → DISPATCHED → DELIVERED.</td></tr>
+      <tr><td><b>Transfer</b></td><td>Kirim antar gudang/cabang</td><td>Asal: buat → gudang tujuan → item → <b>Kirim</b>. Tujuan: <b>Perlu Diterima</b> → scan batch → qty (boleh sebagian) → rak opsional.</td><td>Asal: AVAILABLE → IN_TRANSIT. Tujuan: → AVAILABLE.</td></tr>
+      <tr><td><b>Stock Opname</b></td><td>Hitung fisik per lokasi</td><td>Scan lokasi → scan batch, isi qty fisik per status → <b>Simpan Draft</b>.</td><td>Stok berubah setelah disetujui supervisor/admin.</td></tr>
+      <tr><td><b>Riwayat · Lookup · Lokasi</b></td><td>Informasi</td><td>Jejak batch dan transaksi; stok per batch/lokasi/status; daftar rak dan area QC.</td><td>Hanya baca.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>4.4 Aturan penting di lapangan</h2>
+  <ul>
+    <li>Barang wajib QC tidak dapat dikeluarkan sebelum QC Inspection dan QC Release; barang RECEIVED harus di-putaway dulu.</li>
+    <li>Saat Tally PO / picking SO, item di luar dokumen atau melebihi sisa dokumen langsung ditolak.</li>
+    <li>Barang yang sudah kedaluwarsa tidak bisa diterima, dikeluarkan, atau ditransfer.</li>
+    <li>Saat packing, hanya barang dan batch hasil picking yang boleh masuk koli. Saat loading, koli yang sama tidak bisa dimuat dua kali dan dispatch ditolak bila ada koli tertinggal.</li>
+    <li>Tekan tombol simpan sekali. Jika koneksi putus dan transaksi dikirim ulang, backend tidak menggandakannya (Idempotency-Key).</li>
+    <li>Cetak ulang label tidak pernah membuat kode baru; setiap pencetakan tercatat.</li>
+  </ul>
+</section>
+
+<!-- ================================================================ 5 -->
+<section class="chapter">
+  <h1><span class="num">5</span>Barang Keluar: Picking, Packing, Loading, Dispatch</h1>
+  <p class="lead">Barang keluar tidak berhenti di issuing. Setelah barang di-pick, gudang mengemasnya ke koli berlabel, memuat koli ke kendaraan dengan scan, lalu memberangkatkan kendaraan. Goods Issue baru dikirim ke ERP saat kendaraan berangkat, beserta data kendaraan.</p>
+
+  <h2>5.1 Picking</h2>
+  <p><b>Issuing → Dari Sales Order (Picking)</b>: scan/pilih SO, scan item (batch FEFO) atau batch tertentu, lalu <b>Simpan &amp; Keluarkan</b>. Aplikasi menampilkan batch dan lokasi yang harus diambil dari rak, lalu menawarkan <b>Lanjut Packing</b>.</p>
+
+  <h2>5.2 Packing</h2>
+  <ol>
+    <li>Menu <b>Packing</b> menampilkan <i>Siap packing</i> (sudah di-pick) dan <i>Sedang dikemas</i>. Pilih atau scan nomor <code>ISS-…</code>.</li>
+    <li>Scan barang atau label batch; setiap scan masuk ke <b>koli aktif</b>. <i>Qty per scan</i> dapat diubah; scan barcode karton dikalikan konversi kemasan.</li>
+    <li>Koli penuh → <b>Tutup koli ini &amp; buka koli baru</b>. Isi berat dari menu koli. Tekan lama baris isi koli untuk menghapusnya.</li>
+    <li>Panel <i>Barang hasil picking</i> menunjukkan dikemas / di-pick per batch. <b>Selesai Packing</b> aktif bila semua barang sudah masuk koli.</li>
+    <li>Cetak label koli <code>CTN-…</code> (tujuan, SO, jumlah unit, berat) dan tempel di setiap koli.</li>
+  </ol>
+
+  <h2>5.3 Loading, dispatch, dan POD</h2>
+  <ol>
+    <li>Menu <b>Loading → Shipment baru</b>: no. polisi, jenis kendaraan, sopir dan HP, ekspedisi, dock, tanggal kirim. Packing yang siap dapat dipilih langsung.</li>
+    <li>Scan label setiap koli saat dinaikkan. Packing otomatis masuk shipment saat koli pertamanya di-scan; satu kendaraan boleh memuat beberapa SO.</li>
+    <li>Layar menampilkan <i>koli dimuat / total</i> per SO. Ketuk koli hijau untuk membongkar koli yang salah muat.</li>
+    <li>Bila semua koli dimuat, tekan <b>Dispatch</b> dan isi nomor segel. Goods Issue dan status pengiriman langsung dikirim ke ERP; shipment terkunci.</li>
+    <li>Setelah barang sampai, buka shipment → <b>Konfirmasi Diterima (POD)</b> dan isi nama penerima.</li>
+  </ol>
+  <h2>5.4 Tahap pengiriman</h2>
+  <table>
+    <thead><tr><th style="width:20%">Shipping status</th><th>Terjadi saat</th><th style="width:32%">Dampak ke ERP</th></tr></thead>
+    <tbody>
+      <tr><td><code>PICKED</code></td><td>Issuing dikonfirmasi; stok AVAILABLE berkurang (FEFO)</td><td>Goods Issue dibuat, status <i>Menunggu dispatch</i></td></tr>
+      <tr><td><code>PACKED</code></td><td>Semua barang hasil picking sudah masuk koli</td><td>Status: Dikemas</td></tr>
+      <tr><td><code>LOADED</code></td><td>Semua koli sudah di-scan ke kendaraan</td><td>—</td></tr>
+      <tr><td><code>DISPATCHED</code></td><td>Kendaraan berangkat</td><td>Goods Issue dikirim + Delivery Note</td></tr>
+      <tr><td><code>DELIVERED</code></td><td>Penerima mengonfirmasi (POD)</td><td>Status: Diterima, SO DELIVERED</td></tr>
+    </tbody>
+  </table>
+  <div class="note">Packing dan shipment dapat dibatalkan sebelum dispatch; pengeluaran kembali ke antrean. Pengeluaran manual (tanpa SO) juga dapat dikemas dan dikirim, tetapi tidak dilaporkan ke ERP.</div>
+</section>
+
+<!-- ================================================================ 6 -->
+<section class="chapter">
+  <h1><span class="num">6</span>Aplikasi Desktop (WMS Management)</h1>
+  <p class="lead">Desktop dipakai admin untuk menyiapkan master data, dan admin/supervisor untuk memantau seluruh cabang, dokumen ERP, dan pengiriman. Desktop tidak melakukan transaksi fisik gudang.</p>
+
+  <h2>6.1 Login dan navigasi</h2>
+  <ol>
+    <li>Login dengan akun admin atau supervisor. Akun staff/QC ditolak dengan pesan untuk memakai Aplikasi AIDC.</li>
+    <li>URL backend default <code>http://localhost:3000/api</code>; ubah lewat <b>Pengaturan Server</b> (ada tombol <b>Tes Koneksi</b>).</li>
+    <li>Sidebar berisi kelompok <b>Monitoring</b>, <b>Dokumen ERP</b>, <b>Pengiriman</b>, <b>Transaksi</b>, dan <b>Master Data</b>. Hampir setiap halaman memiliki filter cabang, gudang, status, periode, kotak cari, dan tombol <b>Unduh PDF</b>.</li>
+  </ol>
+
+  <h2>6.2 Menu</h2>
+  <table>
+    <thead><tr><th style="width:14%">Kelompok</th><th style="width:22%">Menu</th><th>Fungsi</th></tr></thead>
+    <tbody>
+      <tr><td rowspan="4"><b>Monitoring</b></td><td>Overview</td><td>Total stok, available, QC, menunggu putaway, in transit, segera expired, expired, stok minimum; grafik per status dan pergerakan 14 hari; dokumen terbuka (termasuk PO/SO, antrean packing, kendaraan dimuat/dalam perjalanan, sinkronisasi gagal); stok per gudang.</td></tr>
+      <tr><td>Stok per Cabang/Gudang</td><td>Stok per cabang, gudang, lokasi, produk, atau batch, dengan kolom per status.</td></tr>
+      <tr><td>Batch &amp; Expiry</td><td>Saldo urut FEFO; filter kedaluwarsa, segera kedaluwarsa (7–180 hari), aman, tanpa expiry. Klik baris untuk jejak batch.</td></tr>
+      <tr><td>QC &amp; Barang Tertahan</td><td>Barang menunggu putaway, QC pending, hold, passed belum release, rejected; riwayat inspeksi.</td></tr>
+      <tr><td rowspan="3"><b>Dokumen ERP</b></td><td>Dokumen Inbound (PO)</td><td>PO dari ERP: % pemenuhan, item, transaksi receiving, status Goods Receipt. Dokumen manual, short close, batal.</td></tr>
+      <tr><td>Dokumen Outbound (SO)</td><td>SO dari ERP: pemenuhan, transaksi picking dengan tahap pengiriman (packing, shipment), ringkasan di-pick / dikemas / dikirim / diterima.</td></tr>
+      <tr><td>Sinkronisasi ERP</td><td>Antrean event ke ERP: Menunggu dispatch, Menunggu, Terkirim, Gagal; isi data yang dikirim; kirim ulang.</td></tr>
+      <tr><td rowspan="2"><b>Pengiriman</b></td><td>Packing</td><td>Progres packing per SO, isi koli, berat, shipment. PDF Packing List.</td></tr>
+      <tr><td>Loading &amp; Shipment</td><td>Kendaraan, sopir, koli dimuat, waktu berangkat, POD. PDF Manifest Muat dan Surat Jalan.</td></tr>
+      <tr><td rowspan="6"><b>Transaksi</b></td><td>Receiving</td><td>Penerimaan dengan Ref. PO, item, lot, expiry, batch. PDF Bukti Penerimaan.</td></tr>
+      <tr><td>Registrasi Produk Tertunda</td><td>Barang dari temporary receiving: cocokkan ke produk lama, buat produk baru, atau tolak.</td></tr>
+      <tr><td>Issuing</td><td>Pengeluaran dengan Ref. SO, tahap pengiriman, alokasi batch FEFO. PDF Surat Jalan.</td></tr>
+      <tr><td>Transfer Antar Gudang</td><td>Rute, qty dikirim, diterima, sisa transit. PDF Surat Jalan Transfer.</td></tr>
+      <tr><td>Stock Opname</td><td>Hasil hitung dan selisih; <b>Setujui &amp; Sesuaikan Stok</b> atau <b>Batalkan</b>. PDF Berita Acara.</td></tr>
+      <tr><td>Pergerakan Barang</td><td>Ringkasan per tipe, per produk, per hari, dan detail tiap perubahan stok.</td></tr>
+      <tr><td rowspan="2"><b>Master Data</b></td><td>Produk &amp; Barcode</td><td>Registrasi produk; SKU dan barcode EAN-13 otomatis; flag wajib QC dan expiry; minimum stok; kemasan; barcode supplier alternatif; generate barcode massal; cetak label.</td></tr>
+      <tr><td>Kategori · Satuan · Supplier · Cabang · Gudang · Lokasi · User</td><td>Master pendukung; lokasi dengan barcode otomatis dan cetak label; user dengan role dan akses gudang.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>6.3 Persiapan awal oleh admin</h2>
+  <ol>
+    <li><b>Cabang</b>, <b>Gudang</b>, lalu <b>Lokasi / Rak / Bin</b> (barcode lokasi otomatis; cetak dan tempel label di rak).</li>
+    <li><b>Kategori</b>, <b>Satuan</b>, <b>Supplier</b>.</li>
+    <li><b>Produk &amp; Barcode</b>: nama, kategori, satuan; kosongkan SKU/barcode untuk otomatis; aktifkan <i>Wajib QC</i> / <i>Expiry</i>; kemasan dan barcode pabrik bila ada.</li>
+    <li><b>User &amp; Hak Akses</b>: akun per orang, role, dan gudang.</li>
+    <li>Pastikan SKU produk sama dengan kode item di ERP agar PO/SO dapat diterima.</li>
+  </ol>
+  <div class="note">Data yang sudah dipakai (produk berstok, satuan dipakai produk, supplier dipakai penerimaan, lokasi berisi stok, lokasi sistem) tidak dapat dihapus; gunakan status Nonaktif. Stok tidak pernah diubah dari master produk.</div>
+</section>
+
+<!-- ================================================================ 7 -->
+<section class="chapter">
+  <h1><span class="num">7</span>Laporan dan Dokumen PDF</h1>
+  <p class="lead">Setiap halaman laporan di Desktop memiliki tombol <b>Unduh PDF</b>. Isi PDF mengikuti filter yang sedang aktif. PDF dibuka di jendela pratinjau dengan tombol cetak dan simpan. Dokumen per transaksi dicetak dari dialog detail.</p>
+  <table>
+    <thead><tr><th style="width:26%">Halaman</th><th>PDF laporan</th><th style="width:32%">PDF dokumen (dari detail)</th></tr></thead>
+    <tbody>
+      <tr><td>Overview</td><td>Laporan Overview Operasional: KPI, grafik stok per status, tren 14 hari, dokumen terbuka, stok per gudang</td><td>—</td></tr>
+      <tr><td>Stok per Cabang/Gudang</td><td>Laporan stok per kelompok dengan baris total</td><td>—</td></tr>
+      <tr><td>Batch &amp; Expiry</td><td>Laporan batch urut FEFO + peringatan stok kedaluwarsa</td><td>—</td></tr>
+      <tr><td>QC &amp; Barang Tertahan</td><td>Barang tertahan + riwayat inspeksi</td><td>—</td></tr>
+      <tr><td>Pergerakan Barang</td><td>Ringkasan per tipe, produk, hari + detail transaksi</td><td>—</td></tr>
+      <tr><td>Dokumen Inbound / Outbound</td><td>Rekap dokumen ERP</td><td>Dokumen PO / SO: pemenuhan per baris, transaksi, status ERP</td></tr>
+      <tr><td>Sinkronisasi ERP</td><td>Log event WMS → ERP</td><td>—</td></tr>
+      <tr><td>Receiving · Issuing · Transfer · Opname</td><td>Rekap per periode</td><td>Bukti Penerimaan · Surat Jalan · Surat Jalan Transfer · Berita Acara Opname (dengan tanda tangan)</td></tr>
+      <tr><td>Packing</td><td>Rekap packing</td><td>Packing List (isi koli + rekonsiliasi)</td></tr>
+      <tr><td>Loading &amp; Shipment</td><td>Rekap pengiriman</td><td>Manifest Muat · Surat Jalan Pengiriman</td></tr>
+    </tbody>
+  </table>
+  <p>Format seragam: kop berlogo MyWMS dan nomor dokumen, filter yang dipakai, kartu ringkasan, tabel yang otomatis berlanjut ke halaman berikutnya dengan header berulang, serta footer berisi nama pencetak, waktu cetak, dan "Halaman x dari y". Ukuran file sekitar 80–90 KB. Contoh hasil ada di folder <code>docs/contoh-laporan-pdf</code>.</p>
+  <h2>Label barcode</h2>
+  <table>
+    <thead><tr><th style="width:18%">Label</th><th style="width:26%">Contoh kode</th><th>Kapan dicetak</th></tr></thead>
+    <tbody>
+      <tr><td>Produk</td><td>EAN-13 internal prefix 200</td><td>Desktop / Aplikasi AIDC; barcode pabrik tetap dikenali sebagai alternatif.</td></tr>
+      <tr><td>Batch</td><td><code>B261123-0001</code></td><td>Setelah receiving dikonfirmasi.</td></tr>
+      <tr><td>Sementara</td><td><code>TMP261123-0001</code></td><td>Temporary receiving.</td></tr>
+      <tr><td>Lokasi</td><td><code>WH-SBY-001-A-01-02</code></td><td>Ditempel di rak.</td></tr>
+      <tr><td>Koli</td><td><code>CTN-2026-001</code></td><td>Saat packing selesai; di-scan saat loading.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================================================================ 8 -->
+<section class="chapter">
+  <h1><span class="num">8</span>Integrasi ERP</h1>
+  <p class="lead">WMS dan ERP bertukar data dua arah lewat REST API. Transaksi gudang tidak pernah menunggu ERP: event disimpan dulu di outbox dalam transaksi database yang sama, lalu dikirim; bila ERP mati, event dikirim ulang otomatis.</p>
+  <h2>8.1 Dokumen dari ERP</h2>
+  <ul>
+    <li>ERP mengirim PO ke <code>POST /api/integration/v1/inbound-documents</code> dan SO ke <code>/outbound-documents</code> dengan header <code>X-Api-Key</code>. WMS menyimpannya sebagai dokumen <code>IBD-…</code> / <code>OBD-…</code>.</li>
+    <li>Item dicocokkan lewat SKU / barcode; item yang belum ada di master WMS ditolak (422). ERP boleh merevisi dokumen selama gudang belum memprosesnya.</li>
+    <li>Status dokumen: <code>OPEN</code> → <code>IN_PROGRESS</code> → <code>COMPLETED</code>; juga <code>CLOSED</code> (short close) dan <code>CANCELLED</code>.</li>
+    <li>Qty pada transaksi Draft/Pending dihitung sebagai <i>pending</i> agar dua petugas tidak memproses melebihi dokumen. Toleransi lebih-terima PO: <code>INBOUND_OVER_RECEIPT_PERCENT</code>.</li>
+  </ul>
+  <h2>8.2 Event ke ERP</h2>
+  <table>
+    <thead><tr><th style="width:24%">Event</th><th style="width:22%">Kapan</th><th style="width:26%">Endpoint ERP</th><th>Isi utama</th></tr></thead>
+    <tbody>
+      <tr><td>GOODS_RECEIPT</td><td>Receiving dari PO dikonfirmasi</td><td><code>/api/wms/goods-receipts</code></td><td>Qty per baris PO, batch, lot supplier, ED, status QC</td></tr>
+      <tr><td>SHIPMENT_PACKED</td><td>Packing selesai</td><td><code>/api/wms/shipment-updates</code></td><td>Jumlah koli, berat, isi koli</td></tr>
+      <tr><td>GOODS_ISSUE</td><td>Shipment di-dispatch (default)</td><td><code>/api/wms/goods-issues</code></td><td>Qty per baris SO, batch FEFO, data kendaraan</td></tr>
+      <tr><td>SHIPMENT_DISPATCHED</td><td>Shipment di-dispatch</td><td><code>/api/wms/shipment-updates</code></td><td>Kendaraan, sopir, segel, koli</td></tr>
+      <tr><td>SHIPMENT_DELIVERED</td><td>POD dikonfirmasi</td><td><code>/api/wms/shipment-updates</code></td><td>Nama penerima, waktu, catatan</td></tr>
+    </tbody>
+  </table>
+  <p>Setiap event memiliki <code>eventId</code> tetap; ERP wajib mengabaikan event yang sama sehingga kirim ulang tidak membuat posting ganda. Status di Desktop: <b>Menunggu dispatch</b> (GI menunggu kendaraan berangkat), <b>Menunggu</b>, <b>Terkirim</b>, <b>Gagal</b> (dikirim ulang dengan jeda 30 detik sampai 30 menit, atau tombol Kirim ulang). Perilaku lama, yaitu GI dikirim saat picking, dapat dipilih dengan <code>ERP_GOODS_ISSUE_AT=issuing</code>.</p>
+  <h2>8.3 ERP Simulator</h2>
+  <p>Folder <code>erp_simulator</code> berisi ERP tiruan (Node.js murni, data di file JSON) di <code>http://localhost:4000</code>. Tab: Purchase Order, Sales Order, Goods Receipt, Goods Issue, <b>Pengiriman</b> (Delivery Note, POD, update status), dan Log Integrasi. Status SO di simulator: <code>SENT</code> → <code>SHIPPED</code> (Goods Issue) → <code>DELIVERED</code> (POD).</p>
+</section>
+
+<!-- ================================================================ 9 -->
+<section class="chapter">
+  <h1><span class="num">9</span>Skenario Kerja End-to-End</h1>
+  <p class="lead">Contoh berikut mengikuti satu produk wajib QC dan ber-expiry dari PO sampai diterima customer.</p>
+  <table>
+    <thead><tr><th class="c" style="width:5%">#</th><th style="width:13%">Siapa</th><th style="width:12%">Aplikasi</th><th>Langkah</th><th style="width:26%">Hasil</th></tr></thead>
+    <tbody>
+      <tr><td class="c">1</td><td>Admin</td><td>Desktop</td><td>Daftarkan "Adaptor 20W" (wajib QC, expiry); SKU &amp; barcode otomatis</td><td>Belum ada stok</td></tr>
+      <tr><td class="c">2</td><td>Pembelian</td><td>ERP</td><td>Buat PO 100 unit dan kirim ke WMS</td><td>Dokumen inbound OPEN</td></tr>
+      <tr><td class="c">3</td><td>Staff</td><td>Aplikasi AIDC</td><td>Receiving → Terima dari PO (Tally): scan 100 unit, isi ED, Confirm; cetak label batch</td><td>100 QC_PENDING; Goods Receipt ke ERP</td></tr>
+      <tr><td class="c">4</td><td>QC</td><td>Aplikasi AIDC</td><td>QC Inspection: 90 PASS, 10 FAIL → QC Release 90 ke rak; retur 10</td><td>90 AVAILABLE</td></tr>
+      <tr><td class="c">5</td><td>Penjualan</td><td>ERP</td><td>Buat SO 40 unit untuk customer</td><td>Dokumen outbound OPEN</td></tr>
+      <tr><td class="c">6</td><td>Staff</td><td>Aplikasi AIDC</td><td>Issuing → Dari Sales Order: scan item, Simpan &amp; Keluarkan (FEFO)</td><td>50 AVAILABLE; GI menunggu dispatch</td></tr>
+      <tr><td class="c">7</td><td>Staff</td><td>Aplikasi AIDC</td><td>Packing: 40 unit ke 2 koli, isi berat, cetak label CTN</td><td>Status Dikemas ke ERP</td></tr>
+      <tr><td class="c">8</td><td>Staff</td><td>Aplikasi AIDC</td><td>Loading: shipment baru (L 8821 UK), scan 2 koli, Dispatch + segel</td><td>Goods Issue + Delivery Note di ERP; SO SHIPPED</td></tr>
+      <tr><td class="c">9</td><td>Staff / sopir</td><td>Aplikasi AIDC</td><td>Konfirmasi Diterima (POD) dengan nama penerima</td><td>SO DELIVERED</td></tr>
+      <tr><td class="c">10</td><td>Supervisor</td><td>Desktop</td><td>Pantau Dokumen SO, Loading &amp; Shipment; cetak Surat Jalan dan Manifest</td><td>PDF siap cetak</td></tr>
+      <tr><td class="c">11</td><td>Staff + supervisor</td><td>AIDC + Desktop</td><td>Stock opname rak: hitung, lalu setujui di Desktop</td><td>Stok disesuaikan, Berita Acara PDF</td></tr>
+    </tbody>
+  </table>
+  <p>Untuk produk tanpa QC, langkah 4 diganti <b>Putaway</b> (RECEIVED → AVAILABLE).</p>
+</section>
+
+<!-- ================================================================ 10 -->
+<section class="chapter">
+  <h1><span class="num">10</span>Instalasi dan Konfigurasi</h1>
+  <p class="lead">Backend harus berjalan sebelum aplikasi dipakai, dan Aplikasi AIDC harus berada di jaringan Wi-Fi yang sama dengan PC server.</p>
+  <h2>10.1 Struktur folder</h2>
+  <table>
+    <thead><tr><th style="width:42%">Folder</th><th>Isi</th></tr></thead>
+    <tbody>
+      <tr><td><code>Warehouse Management System/warehouse_management_backend</code></td><td>Backend Node.js, SQL awal, migration, uji skenario</td></tr>
+      <tr><td><code>Warehouse Management System/warehouse_management_system</code></td><td>Aplikasi AIDC (Flutter) dan folder <code>docs</code></td></tr>
+      <tr><td><code>Warehouse Management System/erp_simulator</code></td><td>ERP tiruan untuk uji integrasi</td></tr>
+      <tr><td><code>Warehouse Management Dashboard/wms_dashboard</code></td><td>Aplikasi Desktop (Flutter)</td></tr>
+    </tbody>
+  </table>
+  <h2>10.2 Backend</h2>
+  <pre>cd warehouse_management_backend
+npm install
+npm run migrate        # wajib setiap ada pembaruan; aman dijalankan berulang
+npm run dev            # http://&lt;IP-PC&gt;:3000/api</pre>
+  <table>
+    <thead><tr><th style="width:32%">Variabel <code>.env</code></th><th>Keterangan</th></tr></thead>
+    <tbody>
+      <tr><td><code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_NAME</code></td><td>Koneksi MySQL (default database <code>wms_db</code>)</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td>Kunci token login</td></tr>
+      <tr><td><code>ERP_BASE_URL</code>, <code>ERP_API_KEY</code></td><td>Alamat ERP penerima event dan kunci yang dikirim WMS</td></tr>
+      <tr><td><code>ERP_INTEGRATION_KEY</code></td><td>Kunci yang wajib dikirim ERP ke WMS</td></tr>
+      <tr><td><code>ERP_GOODS_ISSUE_AT</code></td><td><code>dispatch</code> (default) atau <code>issuing</code></td></tr>
+      <tr><td><code>INBOUND_OVER_RECEIPT_PERCENT</code></td><td>Toleransi lebih-terima PO (default 0)</td></tr>
+    </tbody>
+  </table>
+  <div class="warn"><b>Jangan</b> import ulang <code>wms_database.sql</code> di database yang sudah berisi data: file tersebut menghapus dan membuat ulang semua tabel.</div>
+  <h2>10.3 ERP Simulator</h2>
+  <pre>cd erp_simulator
+npm start              # http://localhost:4000</pre>
+  <p>Kunci harus sama: <code>WMS_INTEGRATION_KEY</code> (simulator) = <code>ERP_INTEGRATION_KEY</code> (backend), dan <code>ERP_API_KEY</code> sama di keduanya; backend <code>ERP_BASE_URL=http://localhost:4000</code>.</p>
+  <h2>10.4 Aplikasi AIDC</h2>
+  <ul>
+    <li>Halaman login → <b>Pengaturan Server</b> → isi <code>http://&lt;IP-PC&gt;:3000/api</code> (cek IP dengan <code>ipconfig</code>).</li>
+    <li>Build: <code>flutter build apk</code>, pasang di perangkat AIDC. Pasangkan printer label Bluetooth dari ikon printer di beranda.</li>
+  </ul>
+  <h2>10.5 Aplikasi Desktop</h2>
+  <ul>
+    <li>Windows: aktifkan <b>Developer Mode</b> (<code>start ms-settings:developers</code>), lalu <code>flutter pub get</code> dan <code>flutter run -d windows</code>; rilis dengan <code>flutter build windows</code>.</li>
+    <li>URL default <code>http://localhost:3000/api</code>; untuk PC lain gunakan <b>Pengaturan Server</b>.</li>
+  </ul>
+  <p>Akun admin default <code>admin</code> / <code>admin123</code> dibuat otomatis bila tabel user kosong. Segera ganti password.</p>
+</section>
+
+<!-- ================================================================ 11 -->
+<section class="chapter">
+  <h1><span class="num">11</span>Referensi Teknis: API dan Database</h1>
+  <p class="lead">Semua endpoint berada di bawah <code>/api</code>, memakai JSON dan header <code>Authorization: Bearer &lt;token&gt;</code> (kecuali <code>/health</code>, <code>/auth/login</code>, dan <code>/integration/v1</code> yang memakai <code>X-Api-Key</code>). Respons sukses <code>{ success, message, data }</code>; gagal <code>{ success: false, message, errors? }</code>. Header <code>Idempotency-Key</code> mencegah transaksi ganda. Kode: 401 belum login · 403 akses · 404 tidak ditemukan · 409 konflik/status terkunci · 422 validasi atau stok tidak cukup.</p>
+  <h2>11.1 Endpoint utama</h2>
+  <table>
+    <thead><tr><th style="width:13%">Kelompok</th><th style="width:44%">Endpoint</th><th>Fungsi</th></tr></thead>
+    <tbody>
+      <tr><td>Auth</td><td><code>POST /auth/login</code> · <code>GET /auth/me</code></td><td>Login, profil + gudang yang boleh diakses</td></tr>
+      <tr><td>Scan</td><td><code>GET /scan/:code</code></td><td>Identifikasi barcode produk, kemasan, batch, lokasi, TMP, GS1</td></tr>
+      <tr><td>Stok</td><td><code>/inventory/balances</code> · <code>/batches/:id/history</code> · <code>/stock-movements</code></td><td>Saldo, jejak batch, riwayat</td></tr>
+      <tr><td>Receiving</td><td><code>/receivings</code> · <code>/temporary-receivings</code></td><td>Penerimaan (+ <code>inboundDocumentId</code>), barang belum terdaftar</td></tr>
+      <tr><td>QC</td><td><code>/putaways</code> · <code>/qc/*</code> · <code>/inventory-moves</code></td><td>Putaway, QC transfer/inspeksi/release/disposisi</td></tr>
+      <tr><td>Issuing</td><td><code>/issuings</code> · <code>/issuings/validate</code></td><td>Picking FEFO (+ <code>outboundDocumentId</code>, <code>shippingStatus</code>)</td></tr>
+      <tr><td>Packing</td><td><code>/packings/queue</code> · <code>/packings</code> · <code>/:id/scan</code> · <code>/:id/cartons</code> · <code>/:id/complete</code></td><td>Kemas ke koli, selesai packing</td></tr>
+      <tr><td>Shipment</td><td><code>/shipments</code> · <code>/:id/scan</code> · <code>/:id/dispatch</code> · <code>/:id/deliver</code></td><td>Loading, dispatch, POD</td></tr>
+      <tr><td>Transfer · Opname</td><td><code>/transfers</code> · <code>/stock-opnames</code></td><td>Antar gudang, hitung fisik dan persetujuan</td></tr>
+      <tr><td>Dokumen ERP</td><td><code>/inbound-documents</code> · <code>/outbound-documents</code> · <code>/erp-sync/*</code></td><td>PO/SO, close/cancel, monitoring outbox</td></tr>
+      <tr><td>Integrasi</td><td><code>/integration/v1/*</code></td><td>ERP → WMS: dokumen, master item &amp; gudang</td></tr>
+      <tr><td>Label</td><td><code>GET /labels?type=PRODUCT|BATCH|TEMPORARY|PACKAGE|LOCATION|CARTON</code></td><td>Data label + log cetak</td></tr>
+      <tr><td>Laporan</td><td><code>/dashboard/operational</code> · <code>/reports/overview|stock|movements</code></td><td>Antrean gudang (AIDC), laporan Desktop</td></tr>
+      <tr><td>Master</td><td><code>/products</code> · <code>/categories</code> · <code>/units</code> · <code>/suppliers</code> · <code>/branches</code> · <code>/warehouses</code> · <code>/locations</code> · <code>/users</code></td><td>Baca: semua user. Tulis: admin</td></tr>
+    </tbody>
+  </table>
+  <p>Detail parameter ada di <code>warehouse_management_backend/README.md</code>.</p>
+  <h2>11.2 Tabel database utama</h2>
+  <table>
+    <thead><tr><th style="width:36%">Tabel</th><th>Isi</th></tr></thead>
+    <tbody>
+      <tr><td><code>products</code>, <code>product_identifiers</code>, <code>product_packages</code></td><td>Master item, barcode alternatif, kemasan</td></tr>
+      <tr><td><code>product_stock_lots</code>, <code>inventory_balances</code>, <code>stock_movements</code></td><td>Batch, saldo per batch × gudang × lokasi × status, audit trail</td></tr>
+      <tr><td><code>receivings</code>, <code>issuings</code>, <code>transfers</code>, <code>stock_opnames</code> (+ item &amp; lot)</td><td>Dokumen transaksi dan alokasi batch; <code>issuings.shipping_status</code></td></tr>
+      <tr><td><code>temporary_receivings</code>, <code>label_print_logs</code></td><td>Barang belum terdaftar, riwayat cetak label</td></tr>
+      <tr><td><code>inbound_documents</code>, <code>outbound_documents</code> (+ items)</td><td>PO / SO dari ERP</td></tr>
+      <tr><td><code>packings</code>, <code>packing_cartons</code>, <code>packing_items</code>, <code>shipments</code></td><td>Packing, koli &amp; isinya, kendaraan</td></tr>
+      <tr><td><code>erp_sync_events</code></td><td>Outbox event ke ERP</td></tr>
+      <tr><td><code>branches</code>, <code>warehouses</code>, <code>warehouse_locations</code>, <code>users</code>, <code>user_warehouses</code></td><td>Struktur gudang, user, hak akses</td></tr>
+    </tbody>
+  </table>
+  <h2>11.3 Migration</h2>
+  <table>
+    <thead><tr><th style="width:28%">Migration</th><th>Perubahan</th></tr></thead>
+    <tbody>
+      <tr><td><code>002_scan_batch_qc</code></td><td>Cabang, akses gudang, barcode alternatif, saldo per lokasi/status, QC, alokasi batch, idempotency</td></tr>
+      <tr><td><code>003_suppliers_units</code></td><td>Master supplier &amp; satuan</td></tr>
+      <tr><td><code>004_smart_receiving_labels</code></td><td>Kemasan, temporary receiving, log cetak label</td></tr>
+      <tr><td><code>005_erp_documents</code></td><td>Dokumen PO/SO, outbox sinkronisasi ERP</td></tr>
+      <tr><td><code>006_packing_shipping</code></td><td>Packing, koli, shipment, tahap pengiriman, event pengiriman, status WAITING</td></tr>
+    </tbody>
+  </table>
+  <p>Semua migration non-destruktif dan dapat di-rollback (<code>npm run migrate:down</code>). Status: <code>npm run migrate:status</code>.</p>
+</section>
+
+<!-- ================================================================ 12 -->
+<section class="chapter">
+  <h1><span class="num">12</span>Pengujian dan Status</h1>
+  <p class="lead">Backend dan kedua aplikasi diuji otomatis. Tampilan aplikasi dirender dari kode dengan data asli untuk pemeriksaan visual; uji di perangkat AIDC fisik dengan scanner dan printer dilakukan saat implementasi.</p>
+  <table>
+    <thead><tr><th style="width:32%">Pengujian</th><th style="width:16%">Hasil</th><th>Cakupan</th></tr></thead>
+    <tbody>
+      <tr><td>Backend <code>npm run test:scenarios</code></td><td><span class="pill ok">25/25 lulus</span></td><td>Receiving, QC parsial, FEFO, transfer, idempotency, hak akses, opname, GS1, barcode &amp; kemasan, temporary receiving, label, PO → GR (E1), SO → picking → packing → loading → dispatch → GI + Delivery Note → POD (E2), ERP mati &amp; kirim ulang (E3), keamanan integrasi (E4), batal packing/shipment &amp; mode GI lama (E5). Invarian stok dicek setiap skenario.</td></tr>
+      <tr><td>Migration 002 – 006</td><td><span class="pill ok">Lulus</span></td><td>up → down → up</td></tr>
+      <tr><td>Aplikasi AIDC <code>flutter analyze</code> / <code>flutter test</code></td><td><span class="pill ok">0 isu · 40/40</span></td><td>Model, scanner, layout beranda di 5 ukuran layar, dokumen ERP, label ESC/POS, packing &amp; loading tanpa overflow di 320 dp</td></tr>
+      <tr><td>Desktop <code>flutter analyze</code> / <code>flutter test</code></td><td><span class="pill ok">0 isu · 22/22</span></td><td>Model, ApiClient, login, dokumen ERP, PDF laporan, PDF pengiriman</td></tr>
+      <tr><td>Laporan PDF dengan data asli</td><td><span class="pill ok">16 PDF</span></td><td>Dirender dan diperiksa per halaman</td></tr>
+      <tr><td>Aplikasi AIDC di perangkat fisik</td><td><span class="pill part">Saat implementasi</span></td><td>Scanner hardware, printer Bluetooth, jaringan gudang</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================================================================ 13 -->
+<section class="chapter">
+  <h1><span class="num">13</span>Masalah Umum dan Solusi</h1>
+  <table>
+    <thead><tr><th style="width:30%">Pesan / gejala</th><th style="width:30%">Penyebab</th><th>Solusi</th></tr></thead>
+    <tbody>
+      <tr><td>Tidak dapat terhubung ke server / Offline</td><td>Backend mati, beda Wi-Fi, atau IP PC berubah</td><td>Jalankan <code>npm run dev</code>, samakan jaringan, perbarui URL di Pengaturan Server</td></tr>
+      <tr><td>Backend tidak mau start (migration tertunda)</td><td>Pembaruan database belum dijalankan</td><td><code>npm run migrate</code>, lalu <code>npm run dev</code></td></tr>
+      <tr><td>Item belum terdaftar</td><td>Barcode tidak ada di master</td><td>Pilih produk manual, atau Temporary Receiving lalu admin meregistrasi</td></tr>
+      <tr><td>"… tidak ada di PO / SO" / "Qty melebihi sisa"</td><td>Barang di luar dokumen atau melebihi pesanan</td><td>Revisi dokumen di ERP, atau atur toleransi lebih-terima</td></tr>
+      <tr><td>Stok ada tetapi tidak bisa dikeluarkan</td><td>Stok RECEIVED, QC, IN_TRANSIT, atau kedaluwarsa</td><td>Putaway / QC release dulu; cek Batch &amp; Expiry</td></tr>
+      <tr><td>Scan ditolak saat packing</td><td>Barang/batch bukan hasil picking, atau sudah ter-pack semua</td><td>Gunakan batch yang tercantum di panel picking</td></tr>
+      <tr><td>Tombol Dispatch tidak aktif</td><td>Masih ada koli yang belum di-scan ke kendaraan</td><td>Scan koli abu-abu di layar Loading</td></tr>
+      <tr><td>Goods Issue "Menunggu dispatch"</td><td>Normal: barang sudah di-pick, kendaraan belum berangkat</td><td>GI dikirim otomatis saat dispatch</td></tr>
+      <tr><td>Sinkronisasi ERP "Gagal"</td><td>ERP mati atau alamat/kunci salah</td><td>Transaksi gudang tetap sah; perbaiki koneksi lalu Kirim ulang</td></tr>
+      <tr><td>PO/SO tidak muncul di Aplikasi AIDC</td><td>Gudang lain, sudah selesai, atau belum dikirim ERP</td><td>Cek Desktop → Dokumen ERP dan Log Integrasi simulator</td></tr>
+      <tr><td>Kode rak ditolak saat putaway</td><td>Bukan STORAGE, nonaktif, diblokir, atau gudang lain</td><td>Cek Desktop → Lokasi / Rak / Bin</td></tr>
+      <tr><td>Desktop hanya untuk admin dan supervisor</td><td>Login dengan akun staff/QC</td><td>Gunakan Aplikasi AIDC</td></tr>
+      <tr><td>Printer label tidak mencetak</td><td>Belum dipasangkan / Bluetooth mati</td><td>Pasangkan dari ikon printer di beranda; label tetap bisa dicetak ulang</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================================================================ 14 -->
+<section class="chapter">
+  <h1><span class="num">14</span>Batasan dan Pengembangan Lanjutan</h1>
+  <table>
+    <thead><tr><th style="width:34%">Fitur</th><th style="width:16%">Status</th><th>Keterangan</th></tr></thead>
+    <tbody>
+      <tr><td>Integrasi ERP (PO/SO, GR/GI, status pengiriman)</td><td><span class="pill ok">Tersedia</span></td><td>Diuji dengan ERP Simulator; konektor ke ERP produk tertentu (mis. Odoo) dibuat saat implementasi</td></tr>
+      <tr><td>Packing, loading, dispatch, POD</td><td><span class="pill ok">Tersedia</span></td><td>Koli berlabel, manifest, surat jalan</td></tr>
+      <tr><td>Cetak label (produk, batch, lokasi, TMP, koli)</td><td><span class="pill ok">Tersedia</span></td><td>Bluetooth ESC/POS di AIDC; PDF di Desktop</td></tr>
+      <tr><td>Ekspor laporan PDF</td><td><span class="pill ok">Tersedia</span></td><td>Semua halaman laporan dan dokumen transaksi</td></tr>
+      <tr><td>Mode offline / antrean di perangkat</td><td><span class="pill no">Belum</span></td><td>Saat Offline transaksi tidak tersimpan; Idempotency-Key membuat retry aman</td></tr>
+      <tr><td>Kondisi barang saat Tally (GOOD/DAMAGED) &amp; catatan per baris</td><td><span class="pill no">Belum</span></td><td>Barang rusak saat ini ditangani lewat QC</td></tr>
+      <tr><td>Foto QC</td><td><span class="pill part">Sebagian</span></td><td>Foto tersedia di temporary receiving; belum di QC inspection</td></tr>
+      <tr><td>Penutupan selisih transfer</td><td><span class="pill no">Belum</span></td><td>Sisa yang belum diterima tetap tercatat IN_TRANSIT</td></tr>
+      <tr><td>Palet / LPN, rute pengiriman multi-drop, tracking GPS</td><td><span class="pill no">Belum</span></td><td>Satu shipment boleh berisi beberapa SO; POD per shipment</td></tr>
+      <tr><td>Ekspor Excel</td><td><span class="pill no">Belum</span></td><td>Data tersedia di layar, PDF, dan API</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
